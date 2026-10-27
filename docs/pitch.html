@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>Plaga Z · Pitch</title>
+    <style>
+      @page { size: 13.333in 7.5in; margin: 0; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: "Segoe UI", sans-serif; background: #222; }
+      section {
+        width: 13.333in;
+        height: 7.5in;
+        padding: 0.7in 0.8in;
+        background: #101410;
+        color: #e7eee2;
+        page-break-after: always;
+        position: relative;
+      }
+      h1, h2 { font-family: Palatino, "Palatino Linotype", Georgia, serif; font-weight: 500; margin: 0; }
+      h1 { font-size: 84px; line-height: 0.9; }
+      h2 { font-size: 42px; margin-bottom: 18px; }
+      p, li { font-size: 26px; line-height: 1.35; }
+      .gold { color: #e6c35c; letter-spacing: 0.14em; text-transform: uppercase; font-size: 16px; }
+      .big { font-family: Palatino, Georgia, serif; font-size: 92px; margin: 8px 0; }
+      table { width: 100%; border-collapse: collapse; font-size: 26px; }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #2c382c; }
+      th { color: #e6c35c; font-weight: 600; }
+      .footer { position: absolute; bottom: 0.4in; left: 0.8in; color: #8ea08a; font-size: 16px; }
+    </style>
+  </head>
+  <body>
+    <section>
+      <p class="gold">Track B · ULEAM · Manta</p>
+      <h1>La Plaga Z</h1>
+      <p>El Comité de Contención. Un dengue simulado, un presupuesto corto y un número: cuánta gente se salva.</p>
+      <p class="footer">Semilla 20261030 · us-east-1</p>
+    </section>
+    <section>
+      <p class="gold">El problema</p>
+      <h2>Manta ya conoce este apuro.</h2>
+      <ul>
+        <li>Manabí cerró 2024 con 10.572 casos de dengue.</li>
+        <li>En marzo de 2025 Manta iba por 105, y las mingas arrancaron en Eloy Alfaro.</li>
+        <li>No hay dosis, fumigación ni cierres para todos. Hay que elegir hoy.</li>
+      </ul>
+    </section>
+    <section>
+      <p class="gold">El modelo</p>
+      <h2>Una Manta de 1.600 personas.</h2>
+      <p>Hogares, colegios, mercados y buses. El mosquito del barrio pica seis días después. Quien se recupera queda inmune a este serotipo. El foco ya trae 4 infecciosos: es el día en que la vigilancia se entera.</p>
+      <p>Sano, mordido, zombie, exorcizado. Los nombres del reto. El mecanismo es el del dengue.</p>
+    </section>
+    <section>
+      <p class="gold">La estrategia</p>
+      <h2>Cada dólar, donde evita más contagios.</h2>
+      <ul>
+        <li>Vacuna solo a sanos, primero a quien comparte casa o mercado con un caso.</li>
+        <li>Aísla al que todavía va al mercado o al bus. En la casa el mosquito sigue.</li>
+        <li>Fumiga el barrio del brote, no el mapa entero.</li>
+        <li>Cierra un lugar solo si no manda el contagio de vuelta a las casas.</li>
+        <li>Si hoy no alcanza, guarda el dinero. No lo reparte por cumplir.</li>
+      </ul>
+    </section>
+    <section>
+      <p class="gold">La prueba · 20 corridas · misma suerte</p>
+      <h2>792 contagios menos que no hacer nada.</h2>
+      <table>
+        <tr><th></th><th>Contagios</th><th>Pico</th><th>Muertes del escenario</th></tr>
+        <tr><td>No intervenir</td><td>816</td><td>139</td><td>5,1</td></tr>
+        <tr><td>Al azar, mismo presupuesto</td><td>374</td><td>66</td><td>1</td></tr>
+        <tr><td>Comité</td><td>24</td><td>5</td><td>0</td></tr>
+      </table>
+      <p>Gana 20 de 20 contra las dos. Frente al azar evita 350. Gasta 11.735 de 20.160 USD.</p>
+    </section>
+    <section>
+      <p class="gold">Brote sorpresa · 5 minutos</p>
+      <h2>No reprogramamos. Movemos el control.</h2>
+      <ul>
+        <li>Doble de contagiosa.</li>
+        <li>Mitad del presupuesto.</li>
+        <li>El foco abre en el Mercado Central.</li>
+        <li>La vacuna baja al 32 %.</li>
+      </ul>
+      <p>La misma regla recalcula. Si la vacuna rinde menos, el dinero se va a fumigar y a aislar. La semilla del jurado se escribe y se corre en el acto.</p>
+    </section>
+    <section>
+      <p class="gold">AWS · us-east-1</p>
+      <h2>El sitio en CloudFront. El motor en el navegador.</h2>
+      <p>S3 privado, solo lo lee CloudFront. Lambda opcional con el mismo código, tope de 2 ejecuciones. Presupuesto de 10 USD con alerta. Operar el mes sale unos 0,13 USD a precio de lista; con free tier, cerca de cero.</p>
+      <p>No hay historias clínicas ni llaves en el código.</p>
+    </section>
+    <section>
+      <p class="gold">Para el alcalde</p>
+      <h2>No es un pronóstico. Es una forma de elegir.</h2>
+      <p class="big">24</p>
+      <p>contagios medios con el Comité, contra 816 si no se hace nada. La carta está en la herramienta, en castellano, con el rango y la advertencia.</p>
+    </section>
+  </body>
+</html>

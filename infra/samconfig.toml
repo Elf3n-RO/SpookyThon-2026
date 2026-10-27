@@ -1,0 +1,10 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "plaga-z"
+resolve_s3 = true
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"
+region = "us-east-1"
+disable_rollback = false
+parameter_overrides = "SiteBucketName=\"\""

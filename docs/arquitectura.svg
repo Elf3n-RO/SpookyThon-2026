@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" font-family="Segoe UI, sans-serif">
+  <rect width="980" height="560" fill="#101410"/>
+  <text x="32" y="42" fill="#e6c35c" font-size="13" letter-spacing="2">PLAGA Z · REGIÓN US-EAST-1</text>
+  <text x="32" y="72" fill="#e7eee2" font-size="28">Arquitectura</text>
+
+  <rect x="32" y="100" width="250" height="150" fill="#1c2418" stroke="#e6c35c" stroke-width="2"/>
+  <text x="48" y="132" fill="#e6c35c" font-size="12">PÚBLICO</text>
+  <text x="48" y="162" fill="#efe6d2" font-size="20">Navegador</text>
+  <text x="48" y="188" fill="#b7c4ae" font-size="14">Parámetros, semilla y curvas.</text>
+  <text x="48" y="210" fill="#b7c4ae" font-size="14">El motor corre aquí.</text>
+  <text x="48" y="232" fill="#b7c4ae" font-size="14">No salen datos de pacientes.</text>
+
+  <rect x="360" y="100" width="280" height="150" fill="#1c2418" stroke="#7eb6d6" stroke-width="2"/>
+  <text x="376" y="132" fill="#7eb6d6" font-size="12">PÚBLICO · AWS</text>
+  <text x="376" y="162" fill="#efe6d2" font-size="20">CloudFront</text>
+  <text x="376" y="188" fill="#b7c4ae" font-size="14">HTTPS. Única puerta del sitio.</text>
+  <text x="376" y="210" fill="#b7c4ae" font-size="14">Precio clase 100.</text>
+  <text x="376" y="232" fill="#b7c4ae" font-size="14">Certificado por defecto.</text>
+
+  <rect x="700" y="100" width="248" height="150" fill="#17120e" stroke="#e4533d" stroke-width="2"/>
+  <text x="716" y="132" fill="#e4533d" font-size="12">PRIVADO</text>
+  <text x="716" y="162" fill="#efe6d2" font-size="20">S3</text>
+  <text x="716" y="188" fill="#b7c4ae" font-size="14">Bucket bloqueado al público.</text>
+  <text x="716" y="210" fill="#b7c4ae" font-size="14">Lo lee solo CloudFront</text>
+  <text x="716" y="232" fill="#b7c4ae" font-size="14">con Origin Access Control.</text>
+
+  <path d="M282 175 H360" stroke="#e6c35c" stroke-width="2" fill="none"/>
+  <path d="M640 175 H700" stroke="#7eb6d6" stroke-width="2" fill="none"/>
+  <text x="292" y="166" fill="#e6c35c" font-size="12">GET</text>
+
+  <rect x="32" y="310" width="300" height="180" fill="#17120e" stroke="#d6e27a" stroke-width="2"/>
+  <text x="48" y="342" fill="#d6e27a" font-size="12">OPCIONAL · MISMO MOTOR</text>
+  <text x="48" y="372" fill="#efe6d2" font-size="20">Lambda + URL</text>
+  <text x="48" y="400" fill="#b7c4ae" font-size="14">POST / con la configuración.</text>
+  <text x="48" y="422" fill="#b7c4ae" font-size="14">Tope: 24 corridas, 2 en paralelo.</text>
+  <text x="48" y="444" fill="#b7c4ae" font-size="14">Rol solo de logs. Sin base de datos.</text>
+  <text x="48" y="466" fill="#b7c4ae" font-size="14">El demo no depende de ella.</text>
+
+  <rect x="370" y="310" width="270" height="180" fill="#17120e" stroke="#8fbf6a" stroke-width="2"/>
+  <text x="386" y="342" fill="#8fbf6a" font-size="12">PRIVADO</text>
+  <text x="386" y="372" fill="#efe6d2" font-size="20">CloudWatch Logs</text>
+  <text x="386" y="400" fill="#b7c4ae" font-size="14">Logs de la función.</text>
+  <text x="386" y="422" fill="#b7c4ae" font-size="14">Sin datos de salud.</text>
+  <text x="386" y="444" fill="#b7c4ae" font-size="14">Sin claves en el código.</text>
+
+  <rect x="680" y="310" width="268" height="180" fill="#17120e" stroke="#e6c35c" stroke-width="2"/>
+  <text x="696" y="342" fill="#e6c35c" font-size="12">CUENTA</text>
+  <text x="696" y="372" fill="#efe6d2" font-size="20">AWS Budget</text>
+  <text x="696" y="400" fill="#b7c4ae" font-size="14">Tope 10 USD al mes.</text>
+  <text x="696" y="422" fill="#b7c4ae" font-size="14">Alerta al 50 % real</text>
+  <text x="696" y="444" fill="#b7c4ae" font-size="14">y al 80 % previsto.</text>
+  <text x="696" y="466" fill="#b7c4ae" font-size="14">Correo del equipo.</text>
+
+  <path d="M157 250 V310" stroke="#d6e27a" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="168" y="286" fill="#d6e27a" font-size="12">solo si se pide el API</text>
+  <path d="M332 400 H370" stroke="#8fbf6a" stroke-width="2"/>
+</svg>

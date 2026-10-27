@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Plaga Z. Sitio estático privado detrás de CloudFront y la misma simulación en Lambda.
+
+Parameters:
+  SiteBucketName:
+    Type: String
+    Default: ""
+    Description: Nombre del bucket. Vacío usa plaga-z-sitio-ACCOUNT.
+
+Conditions:
+  HasBucketName: !Not [!Equals [!Ref SiteBucketName, ""]]
+
+Resources:
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If
+        - HasBucketName
+        - !Ref SiteBucketName
+        - !Sub "plaga-z-sitio-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "plaga-z-${AWS::AccountId}"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+        Description: Solo CloudFront lee el sitio de Plaga Z
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: Plaga Z Comité de Contención
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: site
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: site
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${SiteBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+
+  SimFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: plaga-z-simular
+      Runtime: nodejs20.x
+      Handler: handler.handler
+      CodeUri: ../dist-lambda/
+      Timeout: 28
+      MemorySize: 512
+      ReservedConcurrentExecutions: 2
+      Description: Misma simulación que el navegador, con tope de corridas.
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - "*"
+          AllowMethods:
+            - POST
+          AllowHeaders:
+            - content-type
+
+Outputs:
+  SiteUrl:
+    Description: URL pública del Comité de Contención
+    Value: !Sub "https://${Distribution.DomainName}"
+  BucketName:
+    Value: !Ref SiteBucket
+  DistributionId:
+    Value: !Ref Distribution
+  SimUrl:
+    Description: POST JSON con la misma configuración del navegador
+    Value: !GetAtt SimFunctionUrl.FunctionUrl
