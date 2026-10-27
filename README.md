@@ -148,3 +148,4 @@ Operar el sistema un mes, a precio de lista y con poco tráfico, sale alrededor 
 ## Presentación
 
 Las láminas están en [docs/pitch.html](docs/pitch.html). Ábranlas en el navegador y usen imprimir → PDF, horizontal. Cabén en menos de 20 MB.
+# SpookyThon-2026
