@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Plaga Z · Comité de Contención de Manta</title>
+    <meta name="description" content="Simula un brote de dengue en Manta y compara una estrategia con recursos limitados contra no intervenir y contra actuar al azar.">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <p class="eyebrow">Comité de Contención · Manta, Manabí</p>
+          <h1>La Plaga Z</h1>
+          <p class="lede">
+            Un brote inspirado en el dengue. La ciudad es una red de hogares, colegios, mercados y buses.
+            El presupuesto llega cada día y no alcanza para todos. Esta herramienta dice a quién vacunar,
+            qué barrio fumigar y qué lugar cerrar, y lo compara con no hacer nada y con gastar lo mismo al azar.
+          </p>
+        </div>
+        <ul class="states">
+          <li><span class="swatch sano"></span> Sano</li>
+          <li><span class="swatch mordido"></span> Mordido</li>
+          <li><span class="swatch zombie"></span> Zombie</li>
+          <li><span class="swatch exo"></span> Exorcizado</li>
+        </ul>
+      </header>
+
+      <div class="surprise" role="group" aria-label="Brote sorpresa">
+        <p>Brote sorpresa</p>
+        <button type="button" data-preset="base">Base</button>
+        <button type="button" data-preset="doble">Doble contagio</button>
+        <button type="button" data-preset="mitad">Mitad de presupuesto</button>
+        <button type="button" data-preset="mercado">Empieza en el mercado</button>
+        <button type="button" data-preset="vacuna">Vacuna a medias</button>
+      </div>
+
+      <div class="layout">
+        <aside id="result" class="result" aria-live="polite">
+          <p class="eyebrow">Resultado</p>
+          <p id="headline" class="headline">La simulación base arranca sola. Puede cambiar la semilla o disparar un brote sorpresa.</p>
+          <div id="scores" class="scores" hidden></div>
+          <dl id="table" class="table" hidden></dl>
+          <ul id="bullets" hidden></ul>
+        </aside>
+
+        <form id="panel" class="panel">
+          <div class="panel-head">
+            <h2>Escenario</h2>
+            <span class="stamp">Brote</span>
+          </div>
+
+          <label>
+            Semilla
+            <input id="seed" name="seed" type="number" min="1" step="1" required>
+          </label>
+
+          <label>
+            Contagio
+            <input id="contagion" name="contagion" type="range" min="0.25" max="3" step="0.05">
+            <span id="contagion-out" class="hint"></span>
+          </label>
+
+          <label>
+            Presupuesto diario (USD)
+            <input id="dailyBudget" name="dailyBudget" type="number" min="0" max="4000" step="10" required>
+          </label>
+
+          <label>
+            Eficacia de la vacuna
+            <input id="vaccineEfficacy" name="vaccineEfficacy" type="range" min="0" max="0.95" step="0.01">
+            <span id="efficacy-out" class="hint"></span>
+          </label>
+
+          <label>
+            Dónde empieza
+            <select id="zeroBarrio" name="zeroBarrio"></select>
+          </label>
+
+          <label>
+            En qué lugar
+            <select id="zeroPlace" name="zeroPlace">
+              <option value="hogar">Un hogar</option>
+              <option value="colegio">El colegio</option>
+              <option value="mercado">El mercado del barrio</option>
+              <option value="mercado-central">El Mercado Central</option>
+              <option value="trabajo">El trabajo</option>
+              <option value="bus">Un bus</option>
+            </select>
+          </label>
+
+          <label>
+            Corridas
+            <input id="runs" name="runs" type="number" min="1" max="80" step="1" required>
+          </label>
+
+          <details>
+            <summary>Más parámetros</summary>
+            <label>
+              Días
+              <input id="days" name="days" type="number" min="20" max="120" step="1">
+            </label>
+            <label>
+              Personas en la ciudad simulada
+              <input id="population" name="population" type="number" min="700" max="3600" step="50">
+            </label>
+            <label>
+              Incubación humana (días)
+              <input id="incubationDays" name="incubationDays" type="number" min="2" max="14" step="1">
+            </label>
+            <label>
+              Días infeccioso
+              <input id="infectiousDays" name="infectiousDays" type="number" min="2" max="14" step="1">
+            </label>
+            <label>
+              Retraso del mosquito (días)
+              <input id="vectorDelay" name="vectorDelay" type="number" min="0" max="14" step="1">
+            </label>
+            <label>
+              Casos ya visibles al empezar
+              <input id="clusterSize" name="clusterSize" type="number" min="1" max="12" step="1">
+            </label>
+          </details>
+
+          <button id="run" class="primary" type="submit">Correr simulación</button>
+          <p id="progress" class="hint" role="status"></p>
+        </form>
+
+        <section class="stage">
+          <div class="map-card">
+            <div class="card-head">
+              <h2>Mapa del ejemplo</h2>
+              <div class="segmented" role="group" aria-label="Política en el mapa">
+                <button type="button" data-policy="smart" class="on">Comité</button>
+                <button type="button" data-policy="random">Azar</button>
+                <button type="button" data-policy="none">Nada</button>
+              </div>
+            </div>
+            <svg id="map" viewBox="0 0 760 560" role="img" aria-label="Barrios de Manta coloreados por el avance del brote">
+              <rect width="760" height="560" fill="#0d1a1c"></rect>
+              <path fill="#12312c" d="M168 36h560v488H210l-48-78 42-70-46-92 36-78-26-86z"></path>
+              <path fill="#0d1a1c" d="M0 0h150l70 90-40 70 48 100-36 80 20 120H0z"></path>
+              <text x="36" y="280" fill="#7f9a96" font-size="13" transform="rotate(-90 36 280)">Pacífico</text>
+              <g id="barrios"></g>
+            </svg>
+            <div class="playback">
+              <button id="play" type="button">Reproducir</button>
+              <input id="day" type="range" min="0" max="71" value="0" aria-label="Día de la simulación">
+              <span id="day-label">Día 1</span>
+            </div>
+            <p id="day-totals" class="hint"></p>
+          </div>
+
+          <div class="chart-card">
+            <div class="card-head">
+              <h2>Curva de contagios</h2>
+              <div class="segmented" role="group" aria-label="Tipo de curva">
+                <button type="button" data-mode="dailyNew" class="on">Nuevos por día</button>
+                <button type="button" data-mode="dailyCum">Acumulado</button>
+              </div>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="chart" width="640" height="280"></canvas>
+              <p id="tip" class="tip" hidden></p>
+            </div>
+            <p class="hint">Línea gruesa: promedio. Banda: rango entre el percentil 10 y el 90 del Comité. Las tres políticas usan la misma ciudad y la misma suerte en cada corrida.</p>
+          </div>
+        </section>
+
+      </div>
+
+      <article id="letter" class="letter" hidden>
+        <div class="letter-top">
+          <p>Informe para el alcalde</p>
+          <button id="copy" type="button">Copiar</button>
+        </div>
+        <div id="letter-body"></div>
+      </article>
+
+      <footer>
+        <p>
+          Ciudad simulada con la mezcla de parroquias del cantón Manta (INEC 2022: 271.145 habitantes).
+          Zombie es la persona infecciosa; exorcizado, la que quedó inmune a este serotipo.
+          No es un pronóstico del Ministerio de Salud ni una orden de vacunación.
+        </p>
+      </footer>
+    </div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
