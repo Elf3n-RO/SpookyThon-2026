@@ -457,7 +457,7 @@ function renderMapTiles(origin) {
         tile.draggable = false;
         tile.decoding = "async";
         tile.addEventListener("load", () => {
-          mapStatus.textContent = "Círculos sobre Manta: el área sigue los zombies de hoy. Verde es leve, naranja es medio y rojo es grave.";
+          mapStatus.textContent = "Círculos sobre Manta: el área queda en su barrio y sigue los zombies de hoy. Verde es leve, naranja es medio y rojo es grave.";
         }, { once: true });
         tile.addEventListener("error", () => {
           mapStatus.textContent = "No se pudieron cargar las teselas de OpenStreetMap. Los puntos simulados siguen visibles; compruebe su conexión.";
@@ -488,6 +488,26 @@ function metersPerPixel(lat, zoom) {
   return (40075016.686 * Math.cos((lat * Math.PI) / 180)) / (256 * 2 ** zoom);
 }
 
+const zoneCap = new Map();
+
+function zoneDiameterMeters(barrio, severity) {
+  if (severity < 0.02) return 0;
+  let cap = zoneCap.get(barrio.id);
+  if (cap === undefined) {
+    let nearest = Infinity;
+    const cos = Math.cos((barrio.lat * Math.PI) / 180);
+    for (const other of BARRIOS) {
+      if (other.id === barrio.id) continue;
+      const dLat = (other.lat - barrio.lat) * 111320;
+      const dLon = (other.lon - barrio.lon) * 111320 * cos;
+      nearest = Math.min(nearest, Math.hypot(dLat, dLon));
+    }
+    cap = Math.min(700, nearest * 0.62);
+    zoneCap.set(barrio.id, cap);
+  }
+  return cap * Math.sqrt(severity);
+}
+
 function renderMap() {
   if (!mapFrame.clientWidth || !mapFrame.clientHeight) return;
   const origin = getMapOrigin();
@@ -501,7 +521,7 @@ function renderMap() {
     const severity = Number(marker.dataset.severity) || 0;
     const dot = marker.querySelector(".map-marker-dot");
     const zone = marker.querySelector(".map-zone");
-    const diameterM = severity < 0.02 ? 0 : 2200 * Math.sqrt(severity);
+    const diameterM = zoneDiameterMeters(barrio, severity);
     const spread = diameterM / metersPerPixel(barrio.lat, state.mapZoom);
     zone.style.width = `${spread}px`;
     zone.style.height = `${spread}px`;
