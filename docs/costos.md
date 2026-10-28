@@ -15,12 +15,13 @@ Región de los precios: **us-east-1**. Precios de lista públicos de AWS, sin co
 | URL de función | 0 USD | no usa API Gateway |
 | AWS Budgets | 0 USD para los dos primeros presupuestos | [Precios de Budgets](https://aws.amazon.com/aws-cost-management/aws-budgets/pricing/) |
 | CloudWatch Logs | 0,50 USD por GB ingerido, irrelevante a este volumen | consola de precios |
+| Teselas OpenStreetMap | Sin tarifa API para este uso; servicio externo a AWS sujeto a su política de uso | [Política de teselas](https://operations.osmfoundation.org/policies/tiles/) |
 
 No hay base de datos, NAT gateway, balanceador ni instancias encendidas.
 
-## Cuenta del mes de operación
+## Estimación del mes de operación
 
-Escenario: el sitio sigue publicado un mes después del pitch, con poco tráfico de jurado y ensayo.
+Escenario hipotético: el sitio se publica y sigue activo un mes después del pitch, con poco tráfico de jurado y ensayo. El proyecto aún no está desplegado; estos valores no son una factura real.
 
 - Sitio: unos 2 MB. Diez visitas completas con recarga ≈ 20 MB. Redondeo a **1 GB** de salida para tener margen. `1 × 0,085 = 0,085 USD`.
 - Solicitudes: **20.000**. `2 × 0,010 = 0,020 USD`.
@@ -31,9 +32,9 @@ Escenario: el sitio sigue publicado un mes después del pitch, con poco tráfico
 
 **Total de lista: 0,085 + 0,020 + 0,001 + 0,01 + 0,005 + 0,01 ≈ 0,13 USD al mes.**
 
-Con el free tier de una cuenta nueva (1 TB de salida de CloudFront durante 12 meses, 1 millón de solicitudes Lambda al mes, 5 GB de S3) la factura esperada del evento es **0,00 USD**.
+Con el free tier de una cuenta nueva (1 TB de salida de CloudFront durante 12 meses, 1 millón de solicitudes Lambda al mes, 5 GB de S3), la factura estimada para ese escenario es **0,00 USD**.
 
-Tope de seguridad: presupuesto de **10 USD** con alerta al 50 % del gasto real y al 80 % del previsto. La función tiene como máximo 2 ejecuciones a la vez y 28 segundos, así que un abuso del URL no puede abrir una factura grande en un día.
+Tope previsto: presupuesto de **10 USD** con alertas al 50 % del gasto real y al 80 % del previsto. Aún no se ha creado en una cuenta AWS. La función está limitada a 2 ejecuciones simultáneas y 28 segundos; esto limita su consumo, pero no garantiza por sí solo un costo máximo.
 
 ## Gasto real durante el evento
 
@@ -44,4 +45,4 @@ Completar con la consola de Billing después del despliegue:
 | Factura del mes del evento | _pendiente de la cuenta del equipo_ |
 | Créditos free tier aplicados | _pendiente_ |
 
-La captura de la alerta va en `docs/budget.png` y se enlaza desde el README. No se inventa una captura.
+Después del despliegue, guardar la captura real de la alerta en `docs/budget.png` y enlazarla desde el README. No se inventa una captura.

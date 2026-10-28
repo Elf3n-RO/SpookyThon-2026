@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildCity } from "../public/engine/city.js";
+import { BARRIOS, buildCity } from "../public/engine/city.js";
 import { defaultConfig, normalizeConfig } from "../public/engine/params.js";
 import { childSeed, runTrio, simulateMany } from "../public/engine/index.js";
 
@@ -12,6 +12,14 @@ test("la misma semilla reconstruye la misma ciudad", () => {
     a.people.map((p) => [p.barrio, p.home, p.place, p.bus]),
     b.people.map((p) => [p.barrio, p.home, p.place, p.bus]),
   );
+});
+
+test("cada barrio tiene coordenadas válidas para el mapa", () => {
+  assert.equal(new Set(BARRIOS.map((barrio) => barrio.id)).size, BARRIOS.length);
+  for (const barrio of BARRIOS) {
+    assert.ok(Number.isFinite(barrio.lat) && barrio.lat >= -90 && barrio.lat <= 90, barrio.name);
+    assert.ok(Number.isFinite(barrio.lon) && barrio.lon >= -180 && barrio.lon <= 180, barrio.name);
+  }
 });
 
 test("una corrida es reproducible y no se pasa del presupuesto", () => {

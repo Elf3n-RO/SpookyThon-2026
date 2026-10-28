@@ -7,24 +7,25 @@ import { BETAS } from "./params.js";
 // mosquito > 1 marca sectores donde el escenario supone más criaderos
 // (almacenamiento de agua, densidad). Eloy Alfaro y Primero de Mayo
 // salen en las mingas de dengue reportadas en Manta en 2025.
+// lat/lon son centros aproximados para visualización; no son límites oficiales.
 
 export const BARRIOS = [
-  { id: "centro", name: "Centro", parroquia: "Manta", weight: 7, mosquito: 1.1, x: 318, y: 274 },
-  { id: "tarqui", name: "Tarqui", parroquia: "Manta", weight: 14, mosquito: 1.2, x: 292, y: 348 },
-  { id: "los-esteros", name: "Los Esteros", parroquia: "Manta", weight: 12, mosquito: 1.38, x: 228, y: 312 },
-  { id: "eloy-alfaro", name: "Eloy Alfaro", parroquia: "Manta", weight: 11, mosquito: 1.5, x: 438, y: 368 },
-  { id: "cuba", name: "Cuba", parroquia: "Manta", weight: 6, mosquito: 1.12, x: 368, y: 214 },
-  { id: "quince", name: "15 de Abril", parroquia: "Manta", weight: 7, mosquito: 1.22, x: 470, y: 286 },
-  { id: "primero-mayo", name: "Primero de Mayo", parroquia: "Manta", weight: 6.5, mosquito: 1.42, x: 492, y: 408 },
-  { id: "barbasquillo", name: "Barbasquillo", parroquia: "Manta", weight: 7, mosquito: 0.72, x: 528, y: 176 },
-  { id: "pradera", name: "La Pradera", parroquia: "Manta", weight: 5, mosquito: 0.88, x: 404, y: 156 },
-  { id: "jocay", name: "Jocay", parroquia: "Manta", weight: 5, mosquito: 0.84, x: 176, y: 220 },
-  { id: "maria", name: "María Auxiliadora", parroquia: "Manta", weight: 6, mosquito: 1.18, x: 386, y: 442 },
-  { id: "urbirrios", name: "Urbirrios", parroquia: "Manta", weight: 5.1, mosquito: 1.0, x: 556, y: 292 },
-  { id: "san-pedro", name: "San Pedro", parroquia: "Manta", weight: 5, mosquito: 1.08, x: 236, y: 400 },
-  { id: "san-mateo", name: "San Mateo", parroquia: "San Mateo", weight: 1.4, mosquito: 1.28, x: 610, y: 456 },
-  { id: "santa-marianita", name: "Santa Marianita", parroquia: "Santa Marianita", weight: 1.0, mosquito: 0.9, x: 612, y: 108 },
-  { id: "san-lorenzo", name: "San Lorenzo", parroquia: "San Lorenzo", weight: 1.0, mosquito: 1.22, x: 132, y: 444 },
+  { id: "centro", name: "Centro", parroquia: "Manta", weight: 7, mosquito: 1.1, x: 318, y: 274, lat: -0.9516, lon: -80.7207 },
+  { id: "tarqui", name: "Tarqui", parroquia: "Manta", weight: 14, mosquito: 1.2, x: 292, y: 348, lat: -0.9620, lon: -80.7170 },
+  { id: "los-esteros", name: "Los Esteros", parroquia: "Manta", weight: 12, mosquito: 1.38, x: 228, y: 312, lat: -0.9700, lon: -80.7040 },
+  { id: "eloy-alfaro", name: "Eloy Alfaro", parroquia: "Manta", weight: 11, mosquito: 1.5, x: 438, y: 368, lat: -0.9750, lon: -80.6800 },
+  { id: "cuba", name: "Cuba", parroquia: "Manta", weight: 6, mosquito: 1.12, x: 368, y: 214, lat: -0.9400, lon: -80.7300 },
+  { id: "quince", name: "15 de Abril", parroquia: "Manta", weight: 7, mosquito: 1.22, x: 470, y: 286, lat: -0.9510, lon: -80.6970 },
+  { id: "primero-mayo", name: "Primero de Mayo", parroquia: "Manta", weight: 6.5, mosquito: 1.42, x: 492, y: 408, lat: -0.9630, lon: -80.6900 },
+  { id: "barbasquillo", name: "Barbasquillo", parroquia: "Manta", weight: 7, mosquito: 0.72, x: 528, y: 176, lat: -0.9290, lon: -80.7510 },
+  { id: "pradera", name: "La Pradera", parroquia: "Manta", weight: 5, mosquito: 0.88, x: 404, y: 156, lat: -0.9380, lon: -80.7140 },
+  { id: "jocay", name: "Jocay", parroquia: "Manta", weight: 5, mosquito: 0.84, x: 176, y: 220, lat: -0.9410, lon: -80.7040 },
+  { id: "maria", name: "María Auxiliadora", parroquia: "Manta", weight: 6, mosquito: 1.18, x: 386, y: 442, lat: -0.9740, lon: -80.7020 },
+  { id: "urbirrios", name: "Urbirrios", parroquia: "Manta", weight: 5.1, mosquito: 1.0, x: 556, y: 292, lat: -0.9450, lon: -80.6700 },
+  { id: "san-pedro", name: "San Pedro", parroquia: "Manta", weight: 5, mosquito: 1.08, x: 236, y: 400, lat: -0.9810, lon: -80.7180 },
+  { id: "san-mateo", name: "San Mateo", parroquia: "San Mateo", weight: 1.4, mosquito: 1.28, x: 610, y: 456, lat: -1.0630, lon: -80.7160 },
+  { id: "santa-marianita", name: "Santa Marianita", parroquia: "Santa Marianita", weight: 1.0, mosquito: 0.9, x: 612, y: 108, lat: -0.8530, lon: -80.5930 },
+  { id: "san-lorenzo", name: "San Lorenzo", parroquia: "San Lorenzo", weight: 1.0, mosquito: 1.22, x: 132, y: 444, lat: -1.0700, lon: -80.8950 },
 ];
 
 const ROUTES = [

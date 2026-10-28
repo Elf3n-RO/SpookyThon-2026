@@ -2,9 +2,13 @@
 
 Simula un brote inspirado en el dengue sobre una red de hogares, colegios, mercados y buses de Manta. Cada día llega un presupuesto corto. La herramienta dice a quién vacunar, a quién aislar, qué barrio fumigar y qué lugar cerrar, y mide cuánta gente se evita contagiar frente a no hacer nada y frente a gastar el mismo dinero al azar.
 
-La misma semilla y la misma configuración dan el mismo resultado. El motor corre en el navegador, así que el brote sorpresa no depende de un servidor. En AWS el sitio se publica con CloudFront; la misma simulación puede correr en Lambda.
+La interfaz presenta el reto con estética pixel-art de apocalipsis zombie; el producto sigue siendo una herramienta de simulación y decisión, no un videojuego de acción.
+
+La misma semilla y la misma configuración dan el mismo resultado. El motor corre en el navegador, así que el brote sorpresa no depende de un servidor. La arquitectura prevista para AWS sirve el sitio con CloudFront; la misma simulación también podría correr en Lambda.
 
 Región: **us-east-1**.
+
+**Estado del despliegue:** la aplicación se valida localmente, pero todavía no está desplegada en AWS. La URL pública, la captura del Budget y el gasto real quedan pendientes de la cuenta del equipo.
 
 ## Resultado de la configuración base
 
@@ -41,6 +45,8 @@ El API del servidor recorta a 30 corridas. La Lambda, a 24. El navegador acepta 
 
 Brote sorpresa, sin tocar código: **Doble contagio**, **Mitad de presupuesto**, **Empieza en el mercado**, **Vacuna a medias**. Cada botón cambia el parámetro y vuelve a simular.
 
+El mapa usa teselas públicas de [OpenStreetMap](https://www.openstreetmap.org/copyright), cargadas directamente desde `tile.openstreetmap.org` (sin clave API). Se puede acercar, alejar, arrastrar y seleccionar un barrio para centrarlo. Los puntos representan resultados de la población sintética, no pacientes ni reportes actuales; los centros de barrio son aproximaciones para visualización, no geodatos oficiales. Se necesita conexión a internet para el mapa base; si las teselas no cargan, la interfaz lo indica y conserva los puntos simulados.
+
 ## Cómo desplegarlo
 
 1. Cuenta de AWS del equipo. `aws configure`.
@@ -63,14 +69,18 @@ Eso empaqueta el sitio, crea la pila `plaga-z` en **us-east-1**, sube `dist/` al
 
 Esa imagen tiene que ser la captura real. No está en el repositorio a propósito: una captura inventada no sirve para la rúbrica.
 
-## Qué hay en AWS
+## Arquitectura AWS prevista
 
 El dibujo está en [docs/arquitectura.svg](docs/arquitectura.svg). La fuente, en [docs/arquitectura.md](docs/arquitectura.md).
 
-- **Público:** CloudFront (HTTPS). El navegador baja el sitio y corre el motor. No se suben casos reales.
-- **Privado:** bucket S3 con acceso público bloqueado. Solo CloudFront entra, por Origin Access Control. Cifrado SSE-S3.
-- **Opcional:** Lambda `plaga-z-simular` con URL de función. Misma simulación. Máximo 2 ejecuciones a la vez, 28 segundos, 512 MB. El rol es el básico de logs que crea SAM. No hay base de datos ni claves.
-- **Cuenta:** AWS Budget de 10 USD al mes, dos alertas por correo. CloudWatch Logs solo si se usa la función.
+- **Público tras el despliegue:** CloudFront (HTTPS). El navegador descarga el sitio y ejecuta el motor. No se suben casos reales.
+- **Privado tras el despliegue:** bucket S3 con acceso público bloqueado. Solo CloudFront entra, por Origin Access Control. Cifrado SSE-S3.
+- **Opcional:** Lambda `plaga-z-simular` con URL de función pública. Misma simulación, máximo 2 ejecuciones simultáneas, 28 segundos y 512 MB. No se envían datos personales. El demo principal no depende de esta API. El rol básico que crea SAM permite escribir sus logs en CloudWatch.
+- **Despliegue:** AWS SAM CLI procesa `infra/template.yaml` y crea una pila de AWS CloudFormation para CloudFront, S3 y Lambda.
+- **Pendiente de configurar en la cuenta:** AWS Budget de 10 USD al mes con alertas por correo al 50 % real y al 80 % previsto. CloudWatch Logs se usa solo si se invoca Lambda.
+- **Mapa:** teselas públicas de OpenStreetMap desde el navegador. Es un servicio externo, no un servicio de AWS; se muestra la atribución requerida.
+
+AWS Budgets no forma parte de la plantilla CloudFormation: `scripts/deploy.ps1` lo solicita por separado cuando se ejecuta con `-Email`. La arquitectura anterior está definida en el código, pero todavía no está desplegada en una cuenta.
 
 El demo de los 5 minutos usa el navegador. Así no hay arranque en frío ni una factura si el jurado mueve los parámetros muchas veces.
 
@@ -143,9 +153,9 @@ Lo que el modelo no afirma: no predice la temporada 2026, no dice cuántas dosis
 
 La cuenta detallada está en [docs/costos.md](docs/costos.md).
 
-Operar el sistema un mes, a precio de lista y con poco tráfico, sale alrededor de **0,13 USD**. Con el free tier de una cuenta nueva, la factura esperada del evento es **0,00 USD**. El presupuesto de alerta está en 10 USD. El gasto real de la cuenta se completa en `docs/costos.md` cuando exista la factura.
+Operar el sistema un mes, a precio de lista y con poco tráfico, se estima en **0,13 USD**. Con el free tier de una cuenta nueva, la factura estimada para ese escenario es **0,00 USD**. El Budget de 10 USD es el tope previsto y aún no está creado; el gasto real del proyecto se podrá informar después de desplegarlo y consultar Billing.
 
 ## Presentación
 
-Las láminas están en [docs/pitch.html](docs/pitch.html). Ábranlas en el navegador y usen imprimir → PDF, horizontal. Cabén en menos de 20 MB.
+El PDF listo para entregar está en [docs/pitch.pdf](docs/pitch.pdf) (8 diapositivas, menos de 20 MB). La fuente editable está en [docs/pitch.html](docs/pitch.html); ábranla en el navegador e impriman en horizontal para regenerarlo.
 # SpookyThon-2026

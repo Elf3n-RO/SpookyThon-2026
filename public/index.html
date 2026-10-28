@@ -3,147 +3,323 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Plaga Z · Comité de Contención de Manta</title>
+    <title>Zombie Apocalypse · La Plaga Z</title>
     <meta name="description" content="Simula un brote de dengue en Manta y compara una estrategia con recursos limitados contra no intervenir y contra actuar al azar.">
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
     <div class="wrap">
-      <header>
-        <div>
-          <p class="eyebrow">Comité de Contención · Manta, Manabí</p>
-          <h1>La Plaga Z</h1>
-          <p class="lede">
-            Un brote inspirado en el dengue. La ciudad es una red de hogares, colegios, mercados y buses.
-            El presupuesto llega cada día y no alcanza para todos. Esta herramienta dice a quién vacunar,
-            qué barrio fumigar y qué lugar cerrar, y lo compara con no hacer nada y con gastar lo mismo al azar.
-          </p>
-        </div>
-        <ul class="states">
-          <li><span class="swatch sano"></span> Sano</li>
-          <li><span class="swatch mordido"></span> Mordido</li>
-          <li><span class="swatch zombie"></span> Zombie</li>
-          <li><span class="swatch exo"></span> Exorcizado</li>
-        </ul>
+      <a class="skip-link" href="#juego">Saltar al simulador</a>
+      <header id="inicio" class="site-header">
+        <a class="brand" href="#inicio" aria-label="ZA, inicio">
+          <span class="brand-mark" aria-hidden="true">ZA</span>
+          <span class="brand-name">ZOMBIE<br>APOCALYPSE</span>
+        </a>
+        <button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+          <span class="menu-icon" aria-hidden="true"></span>
+          <span class="sr-only">Abrir menú</span>
+        </button>
+        <nav id="site-nav" class="site-nav" aria-label="Navegación principal">
+          <a href="#inicio">Inicio</a>
+          <a href="#juego">El juego</a>
+          <a href="#caracteristicas">Características</a>
+          <a href="#arquitectura">AWS</a>
+          <a href="#contacto">Contacto</a>
+        </nav>
+        <a class="button button-primary header-cta" href="#juego">JUGAR AHORA</a>
       </header>
 
-      <div class="surprise" role="group" aria-label="Brote sorpresa">
-        <p>Brote sorpresa</p>
-        <button type="button" data-preset="base">Base</button>
-        <button type="button" data-preset="doble">Doble contagio</button>
-        <button type="button" data-preset="mitad">Mitad de presupuesto</button>
-        <button type="button" data-preset="mercado">Empieza en el mercado</button>
-        <button type="button" data-preset="vacuna">Vacuna a medias</button>
-      </div>
+      <main>
+        <section id="hero" class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow"><span class="status-pixel"></span> Comité de Contención · Manta</p>
+            <h1>SOBREVIVE AL <span>APOCALIPSIS</span></h1>
+            <p class="lede">
+              La plaga avanza y los recursos no alcanzan para todos. Simula el brote, decide dónde actuar
+              y descubre cuánta gente puede salvar una estrategia inteligente.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#juego">JUGAR AHORA <span aria-hidden="true">→</span></a>
+              <a class="button button-secondary" href="#caracteristicas">DESCUBRIR EL JUEGO</a>
+            </div>
+            <p class="hero-note">Simulación inspirada en dengue · escenario sintético de Manta</p>
+          </div>
+          <div class="hero-art">
+            <svg class="hero-scene" viewBox="0 0 720 470" role="img" aria-labelledby="scene-title scene-description">
+              <title id="scene-title">Manta en alerta, ilustrada como un mundo de bloques</title>
+              <desc id="scene-description">Una ciudad costera al anochecer. Un mosquito avanza sobre los barrios y un foco de contagio aparece en el mapa.</desc>
+              <rect width="720" height="470" fill="#222b24"></rect>
+              <rect y="0" width="720" height="240" fill="#303c2c"></rect>
+              <rect y="0" width="720" height="16" fill="#394632"></rect>
+              <rect x="512" y="46" width="64" height="16" fill="#d2c775"></rect>
+              <rect x="496" y="62" width="96" height="16" fill="#d2c775"></rect>
+              <rect x="512" y="78" width="64" height="16" fill="#d2c775"></rect>
+              <rect x="544" y="94" width="16" height="16" fill="#d2c775"></rect>
+              <g fill="#4a5840">
+                <rect x="64" y="72" width="64" height="16"></rect><rect x="48" y="88" width="112" height="16"></rect><rect x="80" y="104" width="64" height="16"></rect>
+                <rect x="256" y="40" width="48" height="16"></rect><rect x="240" y="56" width="96" height="16"></rect><rect x="272" y="72" width="48" height="16"></rect>
+              </g>
+              <g fill="#d1d1b3">
+                <rect x="118" y="162" width="16" height="16"></rect><rect x="150" y="162" width="16" height="16"></rect><rect x="182" y="162" width="16" height="16"></rect>
+                <rect x="438" y="138" width="16" height="16"></rect><rect x="470" y="138" width="16" height="16"></rect><rect x="502" y="138" width="16" height="16"></rect>
+              </g>
+              <rect y="224" width="720" height="16" fill="#181d18"></rect>
+              <rect y="240" width="720" height="72" fill="#376164"></rect>
+              <path d="M0 256h64v16h48v16h-32v16H0zm384 0h48v16h80v16h-64v16H384z" fill="#4a7770"></path>
+              <g stroke="#11120f" stroke-width="8" shape-rendering="crispEdges">
+                <path d="M-8 310h736v160H-8z" fill="#31372c"></path>
+                <path d="M48 204h104v106H48z" fill="#69704f"></path>
+                <path d="M174 174h118v136H174z" fill="#555e43"></path>
+                <path d="M316 216h96v94h-96z" fill="#747554"></path>
+                <path d="M432 164h132v146H432z" fill="#4d5941"></path>
+                <path d="M584 200h96v110h-96z" fill="#656b4d"></path>
+              </g>
+              <g fill="#a5b84a" stroke="#11120f" stroke-width="5" shape-rendering="crispEdges">
+                <path d="M68 226h20v20H68zm48 0h20v20h-20zm-48 38h20v20H68zm48 0h20v20h-20z"></path>
+                <path d="M198 198h20v20h-20zm48 0h20v20h-20zm-48 42h20v20h-20zm48 0h20v20h-20z"></path>
+                <path d="M340 238h20v20h-20zm48 0h20v20h-20z"></path>
+                <path d="M458 190h20v20h-20zm52 0h20v20h-20zm-52 42h20v20h-20zm52 0h20v20h-20z"></path>
+                <path d="M606 222h20v20h-20zm48 0h20v20h-20z"></path>
+              </g>
+              <g fill="#11120f" shape-rendering="crispEdges">
+                <path d="M0 344h720v12H0zm0 52h720v12H0zm0 52h720v12H0z"></path>
+                <path d="M136 312h12v158h-12zm176 0h12v158h-12zm176 0h12v158h-12zm176 0h12v158h-12z"></path>
+              </g>
+              <g fill="#d93691" shape-rendering="crispEdges">
+                <rect x="338" y="366" width="16" height="16"></rect><rect x="354" y="350" width="16" height="16"></rect>
+                <rect x="370" y="366" width="16" height="16"></rect><rect x="354" y="382" width="16" height="16"></rect>
+                <rect x="226" y="412" width="12" height="12"></rect><rect x="526" y="328" width="12" height="12"></rect>
+              </g>
+              <g fill="#8dbb32" shape-rendering="crispEdges">
+                <rect x="78" y="350" width="16" height="28"></rect><rect x="72" y="342" width="28" height="12"></rect>
+                <rect x="70" y="378" width="12" height="22"></rect><rect x="90" y="378" width="12" height="22"></rect>
+              </g>
+              <g fill="#d93691" shape-rendering="crispEdges">
+                <rect x="598" y="366" width="16" height="28"></rect><rect x="592" y="358" width="28" height="12"></rect>
+                <rect x="590" y="394" width="12" height="22"></rect><rect x="610" y="394" width="12" height="22"></rect>
+              </g>
+              <g fill="#11120f" shape-rendering="crispEdges">
+                <rect x="555" y="112" width="28" height="8"></rect><rect x="543" y="104" width="12" height="8"></rect><rect x="583" y="104" width="12" height="8"></rect>
+                <rect x="531" y="96" width="16" height="8"></rect><rect x="591" y="96" width="16" height="8"></rect>
+                <rect x="563" y="120" width="8" height="20"></rect><rect x="575" y="120" width="8" height="20"></rect>
+              </g>
+              <g fill="#d93691">
+                <rect x="350" y="342" width="48" height="4"></rect><rect x="350" y="404" width="48" height="4"></rect>
+                <rect x="346" y="350" width="4" height="48"></rect><rect x="398" y="350" width="4" height="48"></rect>
+              </g>
+              <rect y="454" width="720" height="16" fill="#8dbb32"></rect>
+            </svg>
+            <div class="art-caption">
+              <span class="caption-location">MANTA · ZONA COSTERA</span>
+              <span class="caption-alert"><span class="pulse-dot"></span>FOCO DETECTADO · DÍA 01</span>
+            </div>
+          </div>
+        </section>
 
-      <div class="layout">
-        <aside id="result" class="result" aria-live="polite">
-          <p class="eyebrow">Resultado</p>
-          <p id="headline" class="headline">La simulación base arranca sola. Puede cambiar la semilla o disparar un brote sorpresa.</p>
-          <div id="scores" class="scores" hidden></div>
-          <dl id="table" class="table" hidden></dl>
-          <ul id="bullets" hidden></ul>
-        </aside>
+        <section id="caracteristicas" class="features">
+          <div class="section-heading">
+            <p class="eyebrow">Elige cómo responder</p>
+            <h2>LA CIUDAD TE NECESITA</h2>
+          </div>
+          <div class="feature-grid">
+            <article class="feature-card">
+              <span class="feature-icon" aria-hidden="true">01</span>
+              <h3>Explora</h3>
+              <p>Observa cómo se mueve el brote por hogares, colegios, mercados, buses y barrios.</p>
+            </article>
+            <article class="feature-card">
+              <span class="feature-icon" aria-hidden="true">02</span>
+              <h3>Contén</h3>
+              <p>Prueba vacunas, aislamiento y fumigación con un presupuesto limitado por día.</p>
+            </article>
+            <article class="feature-card">
+              <span class="feature-icon" aria-hidden="true">03</span>
+              <h3>Decide</h3>
+              <p>Compara al Comité con no intervenir y con actuar al azar, usando las mismas semillas.</p>
+            </article>
+          </div>
+        </section>
 
-        <form id="panel" class="panel">
-          <div class="panel-head">
-            <h2>Escenario</h2>
-            <span class="stamp">Brote</span>
+        <section id="arquitectura" class="cloud-section" aria-labelledby="cloud-title">
+          <div class="section-heading cloud-heading">
+            <div>
+              <p class="eyebrow">Infraestructura del refugio · us-east-1</p>
+              <h2 id="cloud-title">SERVICIOS AWS DEL PROYECTO</h2>
+              <p class="section-copy">La aplicación corre localmente. Esta es la arquitectura preparada para desplegarla, no una nube que ya esté activa.</p>
+            </div>
+            <span class="cloud-status"><span class="status-pixel"></span> DESPLIEGUE PENDIENTE</span>
+          </div>
+          <div class="cloud-grid">
+            <article class="cloud-card">
+              <span class="cloud-tag">ENTREGA PÚBLICA</span>
+              <h3>CloudFront</h3>
+              <p>Serviría el sitio por HTTPS y almacenaría en caché los archivos estáticos.</p>
+            </article>
+            <article class="cloud-card">
+              <span class="cloud-tag">ORIGEN PRIVADO</span>
+              <h3>Amazon S3</h3>
+              <p>Guardaría la web con acceso público bloqueado. CloudFront entra mediante Origin Access Control.</p>
+            </article>
+            <article class="cloud-card">
+              <span class="cloud-tag optional">API OPCIONAL</span>
+              <h3>AWS Lambda</h3>
+              <p>Puede ejecutar el mismo simulador mediante Function URL. El demo principal no depende de la función.</p>
+            </article>
+            <article class="cloud-card">
+              <span class="cloud-tag optional">SOLO CON LAMBDA</span>
+              <h3>CloudWatch Logs</h3>
+              <p>Recibiría los registros de ejecución de la función. La simulación del navegador no requiere logs de AWS.</p>
+            </article>
+            <article class="cloud-card">
+              <span class="cloud-tag pending">CONTROL DE COSTOS</span>
+              <h3>AWS Budgets</h3>
+              <p>El script puede crear el tope mensual de USD 10 y alertas por correo al 50 % real y 80 % previsto.</p>
+            </article>
+            <article class="cloud-card">
+              <span class="cloud-tag tool">DESPLIEGUE</span>
+              <h3>CloudFormation + SAM</h3>
+              <p>SAM define y despliega la pila de CloudFormation. El presupuesto se solicita por separado desde el script.</p>
+            </article>
+          </div>
+          <p class="cloud-footnote">No usamos base de datos. El presupuesto, las alertas y la URL pública todavía requieren despliegue y una cuenta AWS del equipo.</p>
+        </section>
+
+        <section id="juego" class="game-section" aria-labelledby="game-title">
+          <div class="section-heading game-heading">
+            <div>
+              <p class="eyebrow">Simulador de brotes · Track B</p>
+              <h2 id="game-title">EL MUNDO HA CAÍDO</h2>
+              <p class="section-copy">Ajusta el escenario y encuentra la respuesta que protege a más personas.</p>
+            </div>
+            <ul class="states" aria-label="Estados de la población">
+              <li><span class="swatch sano"></span> Sano</li>
+              <li><span class="swatch mordido"></span> Mordido</li>
+              <li><span class="swatch zombie"></span> Zombie</li>
+              <li><span class="swatch exo"></span> Exorcizado</li>
+            </ul>
           </div>
 
-          <label>
-            Semilla
-            <input id="seed" name="seed" type="number" min="1" step="1" required>
-          </label>
+          <div class="surprise" role="group" aria-label="Brote sorpresa">
+            <p>BROTE SORPRESA</p>
+            <button type="button" data-preset="base">Base</button>
+            <button type="button" data-preset="doble">Doble contagio</button>
+            <button type="button" data-preset="mitad">Mitad de presupuesto</button>
+            <button type="button" data-preset="mercado">Empieza en el mercado</button>
+            <button type="button" data-preset="vacuna">Vacuna a medias</button>
+          </div>
 
-          <label>
-            Contagio
-            <input id="contagion" name="contagion" type="range" min="0.25" max="3" step="0.05">
-            <span id="contagion-out" class="hint"></span>
-          </label>
+          <div class="layout">
+            <aside id="result" class="result" aria-live="polite">
+              <p class="eyebrow">Resultado del brote</p>
+              <p id="headline" class="headline">La simulación base arranca sola. Puede cambiar la semilla o disparar un brote sorpresa.</p>
+              <div id="scores" class="scores" hidden></div>
+              <dl id="table" class="table" hidden></dl>
+              <ul id="bullets" hidden></ul>
+            </aside>
 
-          <label>
-            Presupuesto diario (USD)
-            <input id="dailyBudget" name="dailyBudget" type="number" min="0" max="4000" step="10" required>
-          </label>
+            <form id="panel" class="panel">
+              <div class="panel-head">
+                <h2>Escenario</h2>
+                <span class="stamp">Brote activo</span>
+              </div>
 
-          <label>
-            Eficacia de la vacuna
-            <input id="vaccineEfficacy" name="vaccineEfficacy" type="range" min="0" max="0.95" step="0.01">
-            <span id="efficacy-out" class="hint"></span>
-          </label>
+              <label>
+                Semilla
+                <input id="seed" name="seed" type="number" min="1" step="1" required>
+              </label>
 
-          <label>
-            Dónde empieza
-            <select id="zeroBarrio" name="zeroBarrio"></select>
-          </label>
+              <label>
+                Contagio
+                <input id="contagion" name="contagion" type="range" min="0.25" max="3" step="0.05">
+                <span id="contagion-out" class="hint"></span>
+              </label>
 
-          <label>
-            En qué lugar
-            <select id="zeroPlace" name="zeroPlace">
-              <option value="hogar">Un hogar</option>
-              <option value="colegio">El colegio</option>
-              <option value="mercado">El mercado del barrio</option>
-              <option value="mercado-central">El Mercado Central</option>
-              <option value="trabajo">El trabajo</option>
-              <option value="bus">Un bus</option>
-            </select>
-          </label>
+              <label>
+                Presupuesto diario (USD)
+                <input id="dailyBudget" name="dailyBudget" type="number" min="0" max="4000" step="10" required>
+              </label>
 
-          <label>
-            Corridas
-            <input id="runs" name="runs" type="number" min="1" max="80" step="1" required>
-          </label>
+              <label>
+                Eficacia de la vacuna
+                <input id="vaccineEfficacy" name="vaccineEfficacy" type="range" min="0" max="0.95" step="0.01">
+                <span id="efficacy-out" class="hint"></span>
+              </label>
 
-          <details>
-            <summary>Más parámetros</summary>
-            <label>
-              Días
-              <input id="days" name="days" type="number" min="20" max="120" step="1">
-            </label>
-            <label>
-              Personas en la ciudad simulada
-              <input id="population" name="population" type="number" min="700" max="3600" step="50">
-            </label>
-            <label>
-              Incubación humana (días)
-              <input id="incubationDays" name="incubationDays" type="number" min="2" max="14" step="1">
-            </label>
-            <label>
-              Días infeccioso
-              <input id="infectiousDays" name="infectiousDays" type="number" min="2" max="14" step="1">
-            </label>
-            <label>
-              Retraso del mosquito (días)
-              <input id="vectorDelay" name="vectorDelay" type="number" min="0" max="14" step="1">
-            </label>
-            <label>
-              Casos ya visibles al empezar
-              <input id="clusterSize" name="clusterSize" type="number" min="1" max="12" step="1">
-            </label>
-          </details>
+              <label>
+                Dónde empieza
+                <select id="zeroBarrio" name="zeroBarrio"></select>
+              </label>
 
-          <button id="run" class="primary" type="submit">Correr simulación</button>
-          <p id="progress" class="hint" role="status"></p>
-        </form>
+              <label>
+                En qué lugar
+                <select id="zeroPlace" name="zeroPlace">
+                  <option value="hogar">Un hogar</option>
+                  <option value="colegio">El colegio</option>
+                  <option value="mercado">El mercado del barrio</option>
+                  <option value="mercado-central">El Mercado Central</option>
+                  <option value="trabajo">El trabajo</option>
+                  <option value="bus">Un bus</option>
+                </select>
+              </label>
 
-        <section class="stage">
+              <label>
+                Corridas
+                <input id="runs" name="runs" type="number" min="1" max="80" step="1" required>
+              </label>
+
+              <details>
+                <summary>Más parámetros</summary>
+                <label>
+                  Días
+                  <input id="days" name="days" type="number" min="20" max="120" step="1">
+                </label>
+                <label>
+                  Personas en la ciudad simulada
+                  <input id="population" name="population" type="number" min="700" max="3600" step="50">
+                </label>
+                <label>
+                  Incubación humana (días)
+                  <input id="incubationDays" name="incubationDays" type="number" min="2" max="14" step="1">
+                </label>
+                <label>
+                  Días infeccioso
+                  <input id="infectiousDays" name="infectiousDays" type="number" min="2" max="14" step="1">
+                </label>
+                <label>
+                  Retraso del mosquito (días)
+                  <input id="vectorDelay" name="vectorDelay" type="number" min="0" max="14" step="1">
+                </label>
+                <label>
+                  Casos ya visibles al empezar
+                  <input id="clusterSize" name="clusterSize" type="number" min="1" max="12" step="1">
+                </label>
+              </details>
+
+              <button id="run" class="primary" type="submit">INICIAR SIMULACIÓN</button>
+              <p id="progress" class="hint" role="status"></p>
+            </form>
+
+            <section class="stage">
           <div class="map-card">
             <div class="card-head">
-              <h2>Mapa del ejemplo</h2>
+              <h2>Mapa real y focos del brote</h2>
               <div class="segmented" role="group" aria-label="Política en el mapa">
                 <button type="button" data-policy="smart" class="on">Comité</button>
                 <button type="button" data-policy="random">Azar</button>
                 <button type="button" data-policy="none">Nada</button>
               </div>
             </div>
-            <svg id="map" viewBox="0 0 760 560" role="img" aria-label="Barrios de Manta coloreados por el avance del brote">
-              <rect width="760" height="560" fill="#0d1a1c"></rect>
-              <path fill="#12312c" d="M168 36h560v488H210l-48-78 42-70-46-92 36-78-26-86z"></path>
-              <path fill="#0d1a1c" d="M0 0h150l70 90-40 70 48 100-36 80 20 120H0z"></path>
-              <text x="36" y="280" fill="#7f9a96" font-size="13" transform="rotate(-90 36 280)">Pacífico</text>
-              <g id="barrios"></g>
-            </svg>
+            <div id="map" class="map" role="region" aria-label="Mapa real de Manta con puntos de propagación simulados">
+              <div id="map-tiles" class="map-tiles" aria-hidden="true"></div>
+              <div id="barrios" class="map-markers"></div>
+              <div class="map-controls" role="group" aria-label="Controles del mapa">
+                <button id="zoom-in" type="button" aria-label="Acercar mapa">+</button>
+                <button id="zoom-out" type="button" aria-label="Alejar mapa">−</button>
+                <button id="map-reset" type="button">Manta</button>
+              </div>
+              <a class="map-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>
+            </div>
+            <p id="map-status" class="hint" role="status">Color: contagios acumulados (verde a rosa). Halo blanco: infecciosos de hoy. Puntos barriales aproximados, no casos reales; seleccione uno para centrar el mapa.</p>
             <div class="playback">
               <button id="play" type="button">Reproducir</button>
               <input id="day" type="range" min="0" max="71" value="0" aria-label="Día de la simulación">
@@ -166,24 +342,28 @@
             </div>
             <p class="hint">Línea gruesa: promedio. Banda: rango entre el percentil 10 y el 90 del Comité. Las tres políticas usan la misma ciudad y la misma suerte en cada corrida.</p>
           </div>
+            </section>
+
+          </div>
+
+          <article id="letter" class="letter" hidden>
+            <div class="letter-top">
+              <p>Informe para el alcalde</p>
+              <button id="copy" type="button">Copiar</button>
+            </div>
+            <div id="letter-body"></div>
+          </article>
         </section>
+      </main>
 
-      </div>
-
-      <article id="letter" class="letter" hidden>
-        <div class="letter-top">
-          <p>Informe para el alcalde</p>
-          <button id="copy" type="button">Copiar</button>
-        </div>
-        <div id="letter-body"></div>
-      </article>
-
-      <footer>
+      <footer id="contacto">
         <p>
+          <strong>ZOMBIE APOCALYPSE · ZA</strong><br>
           Ciudad simulada con la mezcla de parroquias del cantón Manta (INEC 2022: 271.145 habitantes).
           Zombie es la persona infecciosa; exorcizado, la que quedó inmune a este serotipo.
           No es un pronóstico del Ministerio de Salud ni una orden de vacunación.
         </p>
+        <a href="#inicio">Volver arriba ↑</a>
       </footer>
     </div>
     <script type="module" src="/app.js"></script>

@@ -139,8 +139,8 @@ function publicDetail(trio) {
       id: b.id,
       name: b.name,
       parroquia: b.parroquia,
-      x: b.x,
-      y: b.y,
+      lat: b.lat,
+      lon: b.lon,
       mosquito: b.mosquito,
     })),
   };

@@ -1,57 +1,99 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" font-family="Segoe UI, sans-serif">
-  <rect width="980" height="560" fill="#101410"/>
-  <text x="32" y="42" fill="#e6c35c" font-size="13" letter-spacing="2">PLAGA Z · REGIÓN US-EAST-1</text>
-  <text x="32" y="72" fill="#e7eee2" font-size="28">Arquitectura</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 760" role="img" aria-labelledby="title description">
+  <title id="title">Arquitectura prevista de Plaga Z con AWS y OpenStreetMap</title>
+  <desc id="description">La web estÃ¡tica se servirÃ­a desde S3 privado mediante CloudFront. Los mapas base vienen directamente de OpenStreetMap. Lambda es una API opcional y sus registros irÃ­an a CloudWatch Logs. AWS Budgets se crea aparte. El despliegue no se ha realizado.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#8dbb32"/>
+    </marker>
+    <style>
+      text { font-family: "Lucida Console", Monaco, monospace; }
+      .title { fill:#fff; font-size:28px; font-weight:700; }
+      .label { fill:#b8b8a7; font-size:12px; }
+      .name { fill:#fff; font-size:18px; font-weight:700; }
+      .detail { fill:#b8b8a7; font-size:12px; }
+      .tag { font-size:10px; font-weight:700; letter-spacing:1px; }
+      .card { fill:#292b22; stroke:#111; stroke-width:4; }
+      .edge { fill:none; stroke:#8dbb32; stroke-width:3; marker-end:url(#arrow); }
+      .provision { fill:none; stroke:#79b8df; stroke-width:2; stroke-dasharray:8 7; marker-end:url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1120" height="720" fill="#191b16"/>
+  <path d="M0 80h1120M0 700h1120" stroke="#111" stroke-width="8"/>
+  <text x="40" y="42" fill="#8dbb32" font-size="12" font-weight="700" letter-spacing="2">PLAGA Z Â· REGION us-east-1</text>
+  <text class="title" x="40" y="120">Arquitectura AWS prevista</text>
+  <rect x="788" y="91" width="290" height="42" fill="#292b22" stroke="#e6a23c" stroke-width="3"/>
+  <text x="808" y="118" fill="#e6a23c" font-size="12" font-weight="700">DESPLIEGUE PENDIENTE</text>
 
-  <rect x="32" y="100" width="250" height="150" fill="#1c2418" stroke="#e6c35c" stroke-width="2"/>
-  <text x="48" y="132" fill="#e6c35c" font-size="12">PÚBLICO</text>
-  <text x="48" y="162" fill="#efe6d2" font-size="20">Navegador</text>
-  <text x="48" y="188" fill="#b7c4ae" font-size="14">Parámetros, semilla y curvas.</text>
-  <text x="48" y="210" fill="#b7c4ae" font-size="14">El motor corre aquí.</text>
-  <text x="48" y="232" fill="#b7c4ae" font-size="14">No salen datos de pacientes.</text>
+  <rect x="40" y="208" width="190" height="128" class="card"/>
+  <text x="60" y="236" class="tag" fill="#8dbb32">CLIENTE</text>
+  <text x="60" y="270" class="name">Navegador</text>
+  <text x="60" y="296" class="detail">UI + simulador local</text>
+  <text x="60" y="317" class="detail">sin datos personales</text>
 
-  <rect x="360" y="100" width="280" height="150" fill="#1c2418" stroke="#7eb6d6" stroke-width="2"/>
-  <text x="376" y="132" fill="#7eb6d6" font-size="12">PÚBLICO · AWS</text>
-  <text x="376" y="162" fill="#efe6d2" font-size="20">CloudFront</text>
-  <text x="376" y="188" fill="#b7c4ae" font-size="14">HTTPS. Única puerta del sitio.</text>
-  <text x="376" y="210" fill="#b7c4ae" font-size="14">Precio clase 100.</text>
-  <text x="376" y="232" fill="#b7c4ae" font-size="14">Certificado por defecto.</text>
+  <rect x="315" y="208" width="220" height="128" class="card"/>
+  <text x="335" y="236" class="tag" fill="#8dbb32">PÃšBLICO Â· HTTPS</text>
+  <text x="335" y="270" class="name">CloudFront</text>
+  <text x="335" y="296" class="detail">CDN para archivos web</text>
+  <text x="335" y="317" class="detail">Origin Access Control</text>
 
-  <rect x="700" y="100" width="248" height="150" fill="#17120e" stroke="#e4533d" stroke-width="2"/>
-  <text x="716" y="132" fill="#e4533d" font-size="12">PRIVADO</text>
-  <text x="716" y="162" fill="#efe6d2" font-size="20">S3</text>
-  <text x="716" y="188" fill="#b7c4ae" font-size="14">Bucket bloqueado al público.</text>
-  <text x="716" y="210" fill="#b7c4ae" font-size="14">Lo lee solo CloudFront</text>
-  <text x="716" y="232" fill="#b7c4ae" font-size="14">con Origin Access Control.</text>
+  <rect x="625" y="208" width="220" height="128" class="card"/>
+  <text x="645" y="236" class="tag" fill="#79b8df">PRIVADO</text>
+  <text x="645" y="270" class="name">Amazon S3</text>
+  <text x="645" y="296" class="detail">origen estÃ¡tico</text>
+  <text x="645" y="317" class="detail">acceso pÃºblico bloqueado</text>
 
-  <path d="M282 175 H360" stroke="#e6c35c" stroke-width="2" fill="none"/>
-  <path d="M640 175 H700" stroke="#7eb6d6" stroke-width="2" fill="none"/>
-  <text x="292" y="166" fill="#e6c35c" font-size="12">GET</text>
+  <path class="edge" d="M230 272h78"/>
+  <text x="251" y="258" class="label">GET</text>
+  <path class="edge" d="M535 272h82"/>
+  <text x="551" y="258" class="label">OAC</text>
 
-  <rect x="32" y="310" width="300" height="180" fill="#17120e" stroke="#d6e27a" stroke-width="2"/>
-  <text x="48" y="342" fill="#d6e27a" font-size="12">OPCIONAL · MISMO MOTOR</text>
-  <text x="48" y="372" fill="#efe6d2" font-size="20">Lambda + URL</text>
-  <text x="48" y="400" fill="#b7c4ae" font-size="14">POST / con la configuración.</text>
-  <text x="48" y="422" fill="#b7c4ae" font-size="14">Tope: 24 corridas, 2 en paralelo.</text>
-  <text x="48" y="444" fill="#b7c4ae" font-size="14">Rol solo de logs. Sin base de datos.</text>
-  <text x="48" y="466" fill="#b7c4ae" font-size="14">El demo no depende de ella.</text>
+  <rect x="40" y="422" width="230" height="132" class="card"/>
+  <text x="60" y="450" class="tag" fill="#d93691">API OPCIONAL Â· PÃšBLICA</text>
+  <text x="60" y="485" class="name">AWS Lambda</text>
+  <text x="60" y="511" class="detail">Function URL Â· 24 corridas</text>
+  <text x="60" y="533" class="detail">mÃ¡x. 2 ejecuciones paralelas</text>
 
-  <rect x="370" y="310" width="270" height="180" fill="#17120e" stroke="#8fbf6a" stroke-width="2"/>
-  <text x="386" y="342" fill="#8fbf6a" font-size="12">PRIVADO</text>
-  <text x="386" y="372" fill="#efe6d2" font-size="20">CloudWatch Logs</text>
-  <text x="386" y="400" fill="#b7c4ae" font-size="14">Logs de la función.</text>
-  <text x="386" y="422" fill="#b7c4ae" font-size="14">Sin datos de salud.</text>
-  <text x="386" y="444" fill="#b7c4ae" font-size="14">Sin claves en el código.</text>
+  <rect x="355" y="422" width="230" height="132" class="card"/>
+  <text x="375" y="450" class="tag" fill="#79b8df">REGISTROS</text>
+  <text x="375" y="485" class="name">CloudWatch</text>
+  <text x="375" y="511" class="detail">Logs de Lambda</text>
+  <text x="375" y="533" class="detail">no registra la UI local</text>
 
-  <rect x="680" y="310" width="268" height="180" fill="#17120e" stroke="#e6c35c" stroke-width="2"/>
-  <text x="696" y="342" fill="#e6c35c" font-size="12">CUENTA</text>
-  <text x="696" y="372" fill="#efe6d2" font-size="20">AWS Budget</text>
-  <text x="696" y="400" fill="#b7c4ae" font-size="14">Tope 10 USD al mes.</text>
-  <text x="696" y="422" fill="#b7c4ae" font-size="14">Alerta al 50 % real</text>
-  <text x="696" y="444" fill="#b7c4ae" font-size="14">y al 80 % previsto.</text>
-  <text x="696" y="466" fill="#b7c4ae" font-size="14">Correo del equipo.</text>
+  <rect x="675" y="422" width="190" height="132" class="card"/>
+  <text x="695" y="450" class="tag" fill="#e6a23c">COSTOS</text>
+  <text x="695" y="485" class="name">AWS Budgets</text>
+  <text x="695" y="511" class="detail">USD 10 / mes</text>
+  <text x="695" y="533" class="detail">alertas por correo</text>
 
-  <path d="M157 250 V310" stroke="#d6e27a" stroke-width="2" stroke-dasharray="5 4"/>
-  <text x="168" y="286" fill="#d6e27a" font-size="12">solo si se pide el API</text>
-  <path d="M332 400 H370" stroke="#8fbf6a" stroke-width="2"/>
+  <path class="edge" d="M135 336v78"/>
+  <text x="149" y="380" class="label">POST opcional</text>
+  <path class="edge" d="M270 488h77"/>
+
+  <rect x="925" y="208" width="153" height="128" class="card"/>
+  <text x="943" y="236" class="tag" fill="#79b8df">PILA IaC</text>
+  <text x="943" y="270" class="name" font-size="13">CloudFormation</text>
+  <text x="943" y="296" class="detail">administra recursos</text>
+  <text x="943" y="317" class="detail">de la plantilla SAM</text>
+
+  <rect x="925" y="422" width="153" height="132" class="card"/>
+  <text x="943" y="450" class="tag" fill="#e6a23c">FUERA DE PILA</text>
+  <text x="943" y="485" class="name" font-size="15">AWS CLI</text>
+  <text x="943" y="511" class="detail">crea Budget</text>
+  <text x="943" y="533" class="detail">si se pasa email</text>
+
+  <path class="provision" d="M925 272h-80"/>
+  <path class="provision" d="M925 236h-25v-48H550v20"/>
+  <path class="provision" d="M925 320h-35v70H285v32"/>
+  <path class="provision" d="M1000 336v78"/>
+  <path class="provision" d="M925 488h-52"/>
+  <path class="edge" d="M585 488h78"/>
+
+  <rect x="355" y="585" width="510" height="70" class="card"/>
+  <text x="375" y="612" class="tag" fill="#8dbb32">MAPA BASE Â· TERCERO, NO AWS</text>
+  <text x="375" y="638" class="detail">OpenStreetMap tiles Â· requiere internet Â· puntos referenciales</text>
+  <path class="provision" d="M230 320h65v300h52"/>
+
+  <rect x="40" y="670" width="1038" height="70" fill="#22251d" stroke="#111" stroke-width="3"/>
+  <text x="60" y="697" class="detail">SAM CLI despliega; AWS CLI solicita el Budget aparte. CloudFormation administra CloudFront, S3 y Lambda.</text>
+  <text x="60" y="721" class="detail">La infraestructura AWS estÃ¡ pendiente. La Function URL opcional es pÃºblica y OpenStreetMap es un proveedor externo.</text>
 </svg>

@@ -4,6 +4,8 @@ import { num } from "./engine/report.js";
 const form = document.querySelector("#panel");
 const progress = document.querySelector("#progress");
 const runButton = document.querySelector("#run");
+const menuToggle = document.querySelector("#menu-toggle");
+const siteNav = document.querySelector("#site-nav");
 const headline = document.querySelector("#headline");
 const scores = document.querySelector("#scores");
 const table = document.querySelector("#table");
@@ -11,12 +13,16 @@ const bullets = document.querySelector("#bullets");
 const letter = document.querySelector("#letter");
 const letterBody = document.querySelector("#letter-body");
 const mapGroup = document.querySelector("#barrios");
+const mapFrame = document.querySelector("#map");
+const mapTiles = document.querySelector("#map-tiles");
+const mapStatus = document.querySelector("#map-status");
 const dayInput = document.querySelector("#day");
 const dayLabel = document.querySelector("#day-label");
 const dayTotals = document.querySelector("#day-totals");
 const playButton = document.querySelector("#play");
 const chart = document.querySelector("#chart");
 const tip = document.querySelector("#tip");
+const tileCache = new Map();
 
 const state = {
   summary: null,
@@ -26,12 +32,15 @@ const state = {
   timer: 0,
   layout: null,
   running: false,
+  mapCenter: { lat: -0.96, lon: -80.72 },
+  mapZoom: 11,
+  mapPointer: null,
 };
 
 const policies = {
-  none: { name: "No intervenir", color: "#e4533d" },
-  random: { name: "Al azar", color: "#d89a55" },
-  smart: { name: "Comité", color: "#d6e27a" },
+  none: { name: "No intervenir", color: "#b8b8a7" },
+  random: { name: "Al azar", color: "#d93691" },
+  smart: { name: "Comité", color: "#8dbb32" },
 };
 
 const fields = [
@@ -222,13 +231,13 @@ function drawChart() {
   for (const key of ["smart", "random", "none"]) {
     g.fillStyle = policies[key].color;
     g.fillRect(legendX, 8, 16, 8);
-    g.fillStyle = "#d5e4d4";
+    g.fillStyle = "#ffffff";
     g.fillText(policies[key].name, legendX + 22, 16);
     legendX += 110;
   }
 
-  g.strokeStyle = "#2c382c";
-  g.fillStyle = "#8ea08a";
+  g.strokeStyle = "#45483c";
+  g.fillStyle = "#b8b8a7";
   g.lineWidth = 1;
   for (let tick = 0; tick <= 4; tick += 1) {
     const value = (max * tick) / 4;
@@ -252,7 +261,7 @@ function drawChart() {
   }
   for (let day = days - 1; day >= 0; day -= 1) g.lineTo(xOf(day), yOf(band.p10[day]));
   g.closePath();
-  g.fillStyle = "rgba(214, 226, 122, 0.18)";
+  g.fillStyle = "rgba(141, 187, 50, 0.18)";
   g.fill();
 
   for (const key of ["none", "random", "smart"]) {
@@ -299,10 +308,114 @@ function onChartMove(event) {
 
 function colorFor(rate) {
   const t = Math.max(0, Math.min(1, rate));
-  const a = [143, 191, 106];
-  const b = [228, 83, 61];
+  const a = [141, 187, 50];
+  const b = [217, 54, 145];
   const c = a.map((channel, i) => Math.round(channel + (b[i] - channel) * t));
   return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+}
+
+function worldPixel(lat, lon, zoom) {
+  const scale = 256 * 2 ** zoom;
+  const boundedLat = Math.max(-85.05112878, Math.min(85.05112878, lat));
+  const sin = Math.sin((boundedLat * Math.PI) / 180);
+  return {
+    x: ((lon + 180) / 360) * scale,
+    y: (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * scale,
+  };
+}
+
+function geographicPoint(x, y, zoom) {
+  const scale = 256 * 2 ** zoom;
+  const lon = (x / scale) * 360 - 180;
+  const n = Math.PI - (2 * Math.PI * y) / scale;
+  const lat = (180 / Math.PI) * Math.atan(Math.sinh(n));
+  return { lat, lon };
+}
+
+function getMapOrigin() {
+  const center = worldPixel(state.mapCenter.lat, state.mapCenter.lon, state.mapZoom);
+  return {
+    x: center.x - mapFrame.clientWidth / 2,
+    y: center.y - mapFrame.clientHeight / 2,
+  };
+}
+
+function renderMapTiles(origin) {
+  const tileCount = 2 ** state.mapZoom;
+  const firstX = Math.floor(origin.x / 256);
+  const firstY = Math.floor(origin.y / 256);
+  const lastX = Math.floor((origin.x + mapFrame.clientWidth) / 256);
+  const lastY = Math.floor((origin.y + mapFrame.clientHeight) / 256);
+  const visible = new Set();
+
+  for (let tileY = firstY; tileY <= lastY; tileY += 1) {
+    if (tileY < 0 || tileY >= tileCount) continue;
+    for (let tileX = firstX; tileX <= lastX; tileX += 1) {
+      const wrappedX = ((tileX % tileCount) + tileCount) % tileCount;
+      const key = `${state.mapZoom}/${wrappedX}/${tileY}`;
+      visible.add(key);
+      let tile = tileCache.get(key);
+      if (!tile) {
+        tile = document.createElement("img");
+        tile.className = "map-tile";
+        tile.dataset.key = key;
+        tile.alt = "";
+        tile.draggable = false;
+        tile.decoding = "async";
+        tile.addEventListener("load", () => {
+          mapStatus.textContent = "Mapa base © OpenStreetMap contributors · puntos por barrio referenciales.";
+        }, { once: true });
+        tile.addEventListener("error", () => {
+          mapStatus.textContent = "No se pudieron cargar las teselas de OpenStreetMap. Los puntos simulados siguen visibles; compruebe su conexión.";
+        }, { once: true });
+        tile.src = `https://tile.openstreetmap.org/${state.mapZoom}/${wrappedX}/${tileY}.png`;
+        tileCache.set(key, tile);
+      }
+      tile.style.left = `${tileX * 256 - origin.x}px`;
+      tile.style.top = `${tileY * 256 - origin.y}px`;
+      if (tile.parentElement !== mapTiles) mapTiles.append(tile);
+    }
+  }
+
+  for (const tile of [...mapTiles.children]) {
+    if (!visible.has(tile.dataset.key)) tile.remove();
+  }
+  if (tileCache.size > 100) {
+    for (const [key, tile] of tileCache) {
+      if (!visible.has(key)) {
+        tileCache.delete(key);
+        if (tileCache.size <= 80) break;
+      }
+    }
+  }
+}
+
+function renderMap() {
+  if (!mapFrame.clientWidth || !mapFrame.clientHeight) return;
+  const origin = getMapOrigin();
+  renderMapTiles(origin);
+  for (const marker of mapGroup.children) {
+    const barrio = BARRIOS.find((item) => item.id === marker.dataset.barrioId);
+    if (!barrio) continue;
+    const point = worldPixel(barrio.lat, barrio.lon, state.mapZoom);
+    const x = point.x - origin.x;
+    const y = point.y - origin.y;
+    marker.style.left = `${x}px`;
+    marker.style.top = `${y}px`;
+    marker.hidden = x < -90 || y < -45 || x > mapFrame.clientWidth + 90 || y > mapFrame.clientHeight + 45;
+  }
+  document.querySelector("#zoom-in").disabled = state.mapZoom >= 18;
+  document.querySelector("#zoom-out").disabled = state.mapZoom <= 8;
+}
+
+function setMapCenter(lat, lon) {
+  state.mapCenter = { lat, lon };
+  renderMap();
+}
+
+function zoomMap(amount) {
+  state.mapZoom = Math.max(8, Math.min(18, state.mapZoom + amount));
+  renderMap();
 }
 
 function drawMap() {
@@ -319,27 +432,24 @@ function drawMap() {
   summary.detail.barrios.forEach((barrio, index) => {
     const size = Math.max(1, sizes[index]);
     const rate = frame.ever[index] / size;
-    const radius = 16 + Math.sqrt(size) * 1.15;
-    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    circle.setAttribute("cx", barrio.x);
-    circle.setAttribute("cy", barrio.y);
-    circle.setAttribute("r", radius.toFixed(1));
-    circle.setAttribute("fill", colorFor(rate));
-    circle.setAttribute("fill-opacity", "0.92");
-    circle.setAttribute("stroke", frame.i[index] > 0 ? "#fff4d2" : "#0d1a1c");
-    circle.setAttribute("stroke-width", frame.i[index] > 0 ? "3" : "1");
-    const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
-    title.textContent = `${barrio.name}: ${frame.i[index]} infecciosos hoy, ${frame.ever[index]} alcanzados`;
-    circle.append(title);
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    label.setAttribute("x", barrio.x);
-    label.setAttribute("y", barrio.y + radius + 12);
-    label.setAttribute("text-anchor", "middle");
-    label.setAttribute("fill", "#d5e4d4");
-    label.setAttribute("font-size", "11");
-    label.textContent = barrio.name;
-    mapGroup.append(circle, label);
+    const marker = document.createElement("button");
+    marker.type = "button";
+    marker.className = `map-marker${frame.i[index] > 0 ? " is-active" : ""}`;
+    marker.dataset.barrioId = barrio.id;
+    marker.style.setProperty("--marker-color", colorFor(rate));
+    marker.setAttribute("aria-label", `${barrio.name}: ${frame.i[index]} infecciosos hoy, ${frame.ever[index]} personas alcanzadas. Enfocar en el mapa.`);
+    marker.title = `${barrio.name}: ${frame.i[index]} infecciosos hoy · ${frame.ever[index]} alcanzados`;
+
+    const dot = document.createElement("span");
+    dot.className = "map-marker-dot";
+    const label = document.createElement("span");
+    label.className = "map-marker-label";
+    label.textContent = `${barrio.name} · ${frame.i[index]} hoy`;
+    marker.append(dot, label);
+    marker.addEventListener("click", () => setMapCenter(barrio.lat, barrio.lon));
+    mapGroup.append(marker);
   });
+  renderMap();
 }
 
 function syncDay() {
@@ -370,6 +480,19 @@ function play() {
 fillDefaults();
 form.addEventListener("submit", onSubmit);
 form.addEventListener("input", syncHints);
+menuToggle.addEventListener("click", () => {
+  const expanded = menuToggle.getAttribute("aria-expanded") === "true";
+  menuToggle.setAttribute("aria-expanded", String(!expanded));
+  menuToggle.querySelector(".sr-only").textContent = expanded ? "Abrir menú" : "Cerrar menú";
+  siteNav.classList.toggle("is-open", !expanded);
+});
+siteNav.querySelectorAll("a").forEach((link) => {
+  link.addEventListener("click", () => {
+    menuToggle.setAttribute("aria-expanded", "false");
+    menuToggle.querySelector(".sr-only").textContent = "Abrir menú";
+    siteNav.classList.remove("is-open");
+  });
+});
 document.querySelectorAll("[data-preset]").forEach((button) => {
   button.addEventListener("click", () => applyPreset(button.dataset.preset));
 });
@@ -387,6 +510,39 @@ document.querySelectorAll("[data-mode]").forEach((button) => {
     drawChart();
   });
 });
+document.querySelector("#zoom-in").addEventListener("click", () => zoomMap(1));
+document.querySelector("#zoom-out").addEventListener("click", () => zoomMap(-1));
+document.querySelector("#map-reset").addEventListener("click", () => {
+  state.mapZoom = 11;
+  setMapCenter(-0.96, -80.72);
+});
+mapFrame.addEventListener("pointerdown", (event) => {
+  if (event.target.closest("button, a")) return;
+  state.mapPointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  mapFrame.setPointerCapture(event.pointerId);
+  mapFrame.classList.add("is-dragging");
+});
+mapFrame.addEventListener("pointermove", (event) => {
+  if (!state.mapPointer || state.mapPointer.id !== event.pointerId) return;
+  const dx = event.clientX - state.mapPointer.x;
+  const dy = event.clientY - state.mapPointer.y;
+  state.mapPointer.x = event.clientX;
+  state.mapPointer.y = event.clientY;
+  const center = worldPixel(state.mapCenter.lat, state.mapCenter.lon, state.mapZoom);
+  state.mapCenter = geographicPoint(center.x - dx, center.y - dy, state.mapZoom);
+  renderMap();
+});
+function stopMapDrag(event) {
+  if (!state.mapPointer || state.mapPointer.id !== event.pointerId) return;
+  state.mapPointer = null;
+  mapFrame.classList.remove("is-dragging");
+}
+mapFrame.addEventListener("pointerup", stopMapDrag);
+mapFrame.addEventListener("pointercancel", stopMapDrag);
+mapFrame.addEventListener("wheel", (event) => {
+  event.preventDefault();
+  zoomMap(event.deltaY < 0 ? 1 : -1);
+}, { passive: false });
 dayInput.addEventListener("input", () => {
   state.day = Number(dayInput.value);
   drawMap();
@@ -405,7 +561,11 @@ document.querySelector("#copy").addEventListener("click", async () => {
     progress.textContent = "No se pudo copiar. Seleccione el informe y cópielo a mano.";
   }
 });
-window.addEventListener("resize", () => drawChart());
+window.addEventListener("resize", () => {
+  drawChart();
+  renderMap();
+});
+mapStatus.textContent = "Cargando mapa base de OpenStreetMap… Ubicaciones barriales referenciales.";
 
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   form.requestSubmit();
