@@ -10,7 +10,8 @@
     "snapshot": "node scripts/snapshot.js",
     "montecarlo": "node scripts/montecarlo.js",
     "build": "node scripts/pack-site.js",
-    "pack": "node scripts/pack-site.js"
+    "pack": "node scripts/pack-site.js",
+    "postinstall": "node scripts/pack-site.js"
   },
   "engines": {
     "node": ">=20"
