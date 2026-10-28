@@ -311,6 +311,7 @@
             </div>
             <div id="map" class="map" role="region" aria-label="Mapa real de Manta con puntos de propagación simulados">
               <div id="map-tiles" class="map-tiles" aria-hidden="true"></div>
+              <svg id="map-routes" class="map-routes" aria-hidden="true"></svg>
               <div id="barrios" class="map-markers"></div>
               <div class="map-controls" role="group" aria-label="Controles del mapa">
                 <button id="zoom-in" type="button" aria-label="Acercar mapa">+</button>
@@ -319,7 +320,7 @@
               </div>
               <a class="map-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a>
             </div>
-            <p id="map-status" class="hint" role="status">Si un barrio está muy afectado, el más cercano entra en la cadena y el área sigue hacia él. El color pasa de verde a naranja y de naranja a rojo.</p>
+            <p id="map-status" class="hint" role="status">Si un barrio está muy afectado, el más cercano entra en la cadena y la infección sigue por las calles. El color pasa de verde a naranja y de naranja a rojo.</p>
             <div class="playback">
               <button id="play" type="button">Reproducir</button>
               <input id="day" type="range" min="0" max="71" value="0" aria-label="Día de la simulación">

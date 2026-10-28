@@ -1,5 +1,6 @@
 import { BARRIOS, completeSummary, defaultConfig, normalizeConfig, simulateMany } from "./engine/index.js";
 import { num } from "./engine/report.js";
+import { STREET_ROUTES } from "./streets.js";
 
 const form = document.querySelector("#panel");
 const progress = document.querySelector("#progress");
@@ -15,6 +16,9 @@ const letterBody = document.querySelector("#letter-body");
 const mapGroup = document.querySelector("#barrios");
 const mapFrame = document.querySelector("#map");
 const mapTiles = document.querySelector("#map-tiles");
+const mapRoutes = document.querySelector("#map-routes");
+const routeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+mapRoutes.append(routeGroup);
 const mapStatus = document.querySelector("#map-status");
 const dayInput = document.querySelector("#day");
 const dayLabel = document.querySelector("#day-label");
@@ -457,7 +461,7 @@ function renderMapTiles(origin) {
         tile.draggable = false;
         tile.decoding = "async";
         tile.addEventListener("load", () => {
-          mapStatus.textContent = "Si un barrio está muy afectado, el más cercano entra en la cadena y el área sigue hacia él.";
+          mapStatus.textContent = "Si un barrio está muy afectado, el más cercano entra en la cadena y la infección sigue por las calles.";
         }, { once: true });
         tile.addEventListener("error", () => {
           mapStatus.textContent = "No se pudieron cargar las teselas de OpenStreetMap. Los puntos simulados siguen visibles; compruebe su conexión.";
@@ -507,6 +511,7 @@ function spreadChain(own) {
   const rank = rankByDistance();
   const shown = own.slice();
   const from = BARRIOS.map(() => -1);
+  const edges = new Map();
   for (let index = 0; index < own.length; index += 1) {
     if (own[index] < 0.02) continue;
     let current = index;
@@ -515,6 +520,10 @@ function spreadChain(own) {
     for (let step = 0; step < 4; step += 1) {
       const next = rank[current].find((item) => item.index !== previous);
       if (!next) break;
+      const key = current < next.index ? `${current}-${next.index}` : `${next.index}-${current}`;
+      const candidate = { from: current, to: next.index, severity: level };
+      const previousEdge = edges.get(key);
+      if (!previousEdge || candidate.severity > previousEdge.severity) edges.set(key, candidate);
       level *= 0.68;
       if (level < 0.02) break;
       if (level > shown[next.index]) {
@@ -525,7 +534,7 @@ function spreadChain(own) {
       current = next.index;
     }
   }
-  return { shown, from };
+  return { shown, from, edges: [...edges.values()] };
 }
 
 function zoneDiameterMeters(barrio, severity) {
@@ -534,10 +543,70 @@ function zoneDiameterMeters(barrio, severity) {
   return Math.min(nearest * 4, 3200) * Math.sqrt(severity);
 }
 
+let activeRoutes = [];
+let routeKey = "";
+let paintedRoutes = [];
+
+function streetLine(fromId, toId) {
+  const key = fromId < toId ? `${fromId}|${toId}` : `${toId}|${fromId}`;
+  const line = STREET_ROUTES[key];
+  if (!line) return null;
+  const from = BARRIOS.find((item) => item.id === fromId);
+  const to = BARRIOS.find((item) => item.id === toId);
+  const start = line[0];
+  const fromDist = Math.hypot(start[0] - from.lat, start[1] - from.lon);
+  const toDist = Math.hypot(start[0] - to.lat, start[1] - to.lon);
+  return fromDist <= toDist ? line : line.slice().reverse();
+}
+
+function renderRoutes(origin) {
+  const picked = mapGroup.querySelector(".is-picked")?.dataset.barrioId || "";
+  const key = `${state.mapZoom}|${picked}|${activeRoutes.map((route) => `${route.fromId}>${route.toId}`).join(";")}`;
+  if (key !== routeKey) {
+    routeKey = key;
+    routeGroup.replaceChildren();
+    paintedRoutes = [];
+    const ordered = activeRoutes.slice().sort((a, b) => {
+      const rank = (route) => (route.fromId === picked || route.toId === picked ? 2 : 0) + route.severity;
+      return rank(a) - rank(b);
+    });
+    for (const route of ordered) {
+      const line = streetLine(route.fromId, route.toId);
+      if (!line) continue;
+      const d = line.map((point, index) => {
+        const pixel = worldPixel(point[0], point[1], state.mapZoom);
+        return `${index === 0 ? "M" : "L"}${pixel.x.toFixed(1)} ${pixel.y.toFixed(1)}`;
+      }).join(" ");
+      const front = route.fromId === picked || route.toId === picked;
+      const base = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const flow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      base.setAttribute("d", d);
+      flow.setAttribute("d", d);
+      base.setAttribute("class", front ? "map-route map-route-base is-front" : "map-route map-route-base");
+      flow.setAttribute("class", front ? "map-route map-route-flow is-front" : "map-route map-route-flow");
+      routeGroup.append(base, flow);
+      paintedRoutes.push({ fromId: route.fromId, toId: route.toId, base, flow });
+    }
+  }
+  for (const item of paintedRoutes) {
+    const live = activeRoutes.find((route) => route.fromId === item.fromId && route.toId === item.toId);
+    if (!live) continue;
+    const width = 3.2 + live.severity * 4.5;
+    item.base.setAttribute("stroke", colorFor(live.severity));
+    item.base.setAttribute("stroke-width", width.toFixed(1));
+    item.flow.setAttribute("stroke", "#fff6e8");
+    item.flow.setAttribute("stroke-width", Math.max(1.6, width * 0.42).toFixed(1));
+  }
+  routeGroup.setAttribute("transform", `translate(${(-origin.x).toFixed(1)} ${(-origin.y).toFixed(1)})`);
+  mapRoutes.setAttribute("viewBox", `0 0 ${mapFrame.clientWidth} ${mapFrame.clientHeight}`);
+  mapRoutes.setAttribute("preserveAspectRatio", "none");
+}
+
 function renderMap() {
   if (!mapFrame.clientWidth || !mapFrame.clientHeight) return;
   const origin = getMapOrigin();
   renderMapTiles(origin);
+  renderRoutes(origin);
   for (const marker of mapGroup.children) {
     const barrio = BARRIOS.find((item) => item.id === marker.dataset.barrioId);
     if (!barrio) continue;
@@ -599,6 +668,11 @@ function drawMap() {
     own[index] = Math.min(1, infected / size / 0.15);
   });
   const chain = spreadChain(own);
+  activeRoutes = chain.edges.map((edge) => ({
+    fromId: summary.detail.barrios[edge.from].id,
+    toId: summary.detail.barrios[edge.to].id,
+    severity: edge.severity,
+  }));
 
   summary.detail.barrios.forEach((barrio, index) => {
     const size = Math.max(1, sizes[index]);
