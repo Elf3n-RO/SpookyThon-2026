@@ -392,6 +392,10 @@ function renderMapTiles(origin) {
   }
 }
 
+function metersPerPixel(lat, zoom) {
+  return (40075016.686 * Math.cos((lat * Math.PI) / 180)) / (256 * 2 ** zoom);
+}
+
 function renderMap() {
   if (!mapFrame.clientWidth || !mapFrame.clientHeight) return;
   const origin = getMapOrigin();
@@ -405,7 +409,8 @@ function renderMap() {
     const severity = Number(marker.dataset.severity) || 0;
     const dot = marker.querySelector(".map-marker-dot");
     const zone = marker.querySelector(".map-zone");
-    const spread = severity < 0.02 ? 0 : 28 + 108 * Math.sqrt(severity);
+    const diameterM = severity < 0.02 ? 0 : 2200 * Math.sqrt(severity);
+    const spread = diameterM / metersPerPixel(barrio.lat, state.mapZoom);
     zone.style.width = `${spread}px`;
     zone.style.height = `${spread}px`;
     zone.style.borderRadius = "50%";
