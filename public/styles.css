@@ -466,6 +466,16 @@ h1 span { color: var(--green); }
   color: var(--ink);
 }
 
+.surprise button:active, #play:active, #copy:active, .segmented button:active {
+  transform: translate(2px, 2px);
+}
+
+.surprise button.on {
+  border-color: var(--green);
+  background: var(--green);
+  color: var(--line);
+}
+
 .layout {
   display: grid;
   grid-template-columns: 310px minmax(0, 1fr);

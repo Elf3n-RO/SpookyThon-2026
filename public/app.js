@@ -32,6 +32,7 @@ const state = {
   timer: 0,
   layout: null,
   running: false,
+  runToken: 0,
   mapCenter: { lat: -0.96, lon: -80.72 },
   mapZoom: 11,
   mapPointer: null,
@@ -85,6 +86,18 @@ function readConfig() {
   return normalizeConfig(raw);
 }
 
+function markPreset(name) {
+  document.querySelectorAll("[data-preset]").forEach((button) => {
+    const on = button.dataset.preset === name;
+    button.classList.toggle("on", on);
+    button.setAttribute("aria-pressed", String(on));
+  });
+}
+
+function presetLabel() {
+  return document.querySelector("[data-preset].on")?.textContent?.trim() || "Escenario";
+}
+
 function applyPreset(name) {
   const set = (id, value) => {
     document.querySelector(`#${id}`).value = value;
@@ -102,31 +115,39 @@ function applyPreset(name) {
   }
   if (name === "vacuna") set("vaccineEfficacy", 0.32);
   syncHints();
+  markPreset(name);
   form.requestSubmit();
 }
 
 async function onSubmit(event) {
   event.preventDefault();
-  if (state.running) return;
+  const token = ++state.runToken;
   state.running = true;
   stop();
   const config = readConfig();
+  const label = presetLabel();
   runButton.disabled = true;
-  progress.textContent = "Preparando la ciudad…";
+  headline.textContent = `Calculando «${label}»…`;
+  progress.textContent = `${label}: preparando la ciudad…`;
   try {
     const summary = await simulateMany(config, (done, total) => {
-      progress.textContent = `Corrida ${done} de ${total}`;
-    });
+      if (token !== state.runToken) return;
+      progress.textContent = `${label}: corrida ${done} de ${total}`;
+    }, () => token === state.runToken);
+    if (!summary || token !== state.runToken) return;
     state.summary = summary;
     state.day = 0;
     render(summary);
-    progress.textContent = `Listo. Semilla ${summary.config.seed}, ${summary.runs} corridas.`;
+    progress.textContent = `Listo. ${label}. Semilla ${summary.config.seed}, ${summary.runs} corridas.`;
   } catch (error) {
+    if (token !== state.runToken) return;
     progress.textContent = "No se pudo simular. Revise los parámetros e intente de nuevo.";
     console.error(error);
   } finally {
-    state.running = false;
-    runButton.disabled = false;
+    if (token === state.runToken) {
+      state.running = false;
+      runButton.disabled = false;
+    }
   }
 }
 
@@ -516,7 +537,10 @@ function play() {
 
 fillDefaults();
 form.addEventListener("submit", onSubmit);
-form.addEventListener("input", syncHints);
+form.addEventListener("input", () => {
+  syncHints();
+  markPreset(null);
+});
 menuToggle.addEventListener("click", () => {
   const expanded = menuToggle.getAttribute("aria-expanded") === "true";
   menuToggle.setAttribute("aria-expanded", String(!expanded));
@@ -605,6 +629,7 @@ window.addEventListener("resize", () => {
 });
 mapStatus.textContent = "Cargando mapa base de OpenStreetMap… Ubicaciones barriales referenciales.";
 
+markPreset("base");
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   form.requestSubmit();
 }
