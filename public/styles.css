@@ -575,44 +575,66 @@ summary { color: var(--green); cursor: pointer; font-size: 10px; font-weight: 80
   position: absolute;
   display: grid;
   justify-items: center;
-  gap: 3px;
   padding: 0;
   transform: translate(-50%, -50%);
   border: 0;
+  border-radius: 50%;
   background: transparent;
+  box-shadow: none;
   cursor: pointer;
   pointer-events: auto;
+  appearance: none;
+  line-height: 0;
 }
 
 .map-marker-dot {
   position: relative;
   display: block;
-  width: 16px;
-  height: 16px;
-  border: 3px solid #111;
-  background: var(--marker-color);
-  box-shadow: 0 0 0 2px #fff;
+  width: var(--zone-size, 22px);
+  height: var(--zone-size, 22px);
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.55), transparent 38%),
+    var(--marker-color);
+  box-shadow:
+    0 0 0 1px rgba(17, 17, 17, 0.45),
+    0 0 16px color-mix(in srgb, var(--marker-color) 70%, transparent);
+  opacity: 0.9;
+}
+
+.map-marker-dot::before {
+  content: "";
+  position: absolute;
+  inset: -42%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--marker-color) 50%, transparent), transparent 68%);
+  pointer-events: none;
 }
 
 .map-marker.is-active .map-marker-dot {
-  width: 20px;
-  height: 20px;
-  box-shadow: 0 0 0 3px #fff, 0 0 0 7px rgba(217, 54, 145, 0.52);
-  animation: marker-pulse 1.4s steps(2, end) infinite;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 22px color-mix(in srgb, var(--marker-color) 80%, transparent);
 }
 
 .map-marker-label {
-  max-width: 136px;
-  padding: 2px 4px;
-  border: 2px solid #111;
-  background: #191b16eF;
-  color: #fff;
-  font-size: 8px;
-  font-weight: 900;
-  line-height: 1.25;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  max-width: 160px;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(17, 23, 16, 0.92);
+  color: #f6f3ea;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 100ms steps(2);
+  transform: translateX(-50%);
   white-space: nowrap;
 }
 
@@ -620,8 +642,8 @@ summary { color: var(--green); cursor: pointer; font-size: 10px; font-weight: 80
 .map-marker:hover .map-marker-label,
 .map-marker:focus-visible .map-marker-label {
   opacity: 1;
-  background: #8dbb32;
-  color: #111;
+  background: rgba(17, 23, 16, 0.92);
+  color: #f6f3ea;
 }
 
 .map-controls {
@@ -667,10 +689,6 @@ summary { color: var(--green); cursor: pointer; font-size: 10px; font-weight: 80
 .map-attribution:hover { color: var(--green); }
 
 #map-status { min-height: 18px; }
-
-@keyframes marker-pulse {
-  50% { box-shadow: 0 0 0 3px #fff, 0 0 0 11px rgba(217, 54, 145, 0.12); }
-}
 
 .playback { margin-top: 10px; }
 #day { flex: 1; }

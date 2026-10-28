@@ -306,12 +306,14 @@ function onChartMove(event) {
   tip.textContent = parts.join(" · ");
 }
 
-function colorFor(rate) {
-  const t = Math.max(0, Math.min(1, rate));
-  const a = [141, 187, 50];
-  const b = [217, 54, 145];
-  const c = a.map((channel, i) => Math.round(channel + (b[i] - channel) * t));
-  return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+function colorFor(severity) {
+  const t = Math.max(0, Math.min(1, severity));
+  const green = [141, 187, 50];
+  const orange = [230, 162, 60];
+  const red = [217, 64, 48];
+  const mix = (from, to, amount) => from.map((channel, index) => Math.round(channel + (to[index] - channel) * amount));
+  const rgb = t <= 0.5 ? mix(green, orange, t / 0.5) : mix(orange, red, (t - 0.5) / 0.5);
+  return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
 }
 
 function worldPixel(lat, lon, zoom) {
@@ -363,7 +365,7 @@ function renderMapTiles(origin) {
         tile.draggable = false;
         tile.decoding = "async";
         tile.addEventListener("load", () => {
-          mapStatus.textContent = "Mapa base © OpenStreetMap contributors · puntos por barrio referenciales.";
+          mapStatus.textContent = "Círculos sobre Manta: el área sigue los zombies de hoy. Verde es leve, naranja es medio y rojo es grave.";
         }, { once: true });
         tile.addEventListener("error", () => {
           mapStatus.textContent = "No se pudieron cargar las teselas de OpenStreetMap. Los puntos simulados siguen visibles; compruebe su conexión.";
@@ -400,9 +402,18 @@ function renderMap() {
     const point = worldPixel(barrio.lat, barrio.lon, state.mapZoom);
     const x = point.x - origin.x;
     const y = point.y - origin.y;
+    const severity = Number(marker.dataset.severity) || 0;
+    const zoomScale = 2 ** (state.mapZoom - 11);
+    const radius = Math.sqrt(10 * 10 + (48 * 48 - 10 * 10) * severity) * zoomScale;
+    const dot = marker.querySelector(".map-marker-dot");
+    const diameter = Math.max(16, Math.min(240, radius * 2));
+    dot.style.width = `${diameter}px`;
+    dot.style.height = `${diameter}px`;
+    dot.style.borderRadius = "50%";
     marker.style.left = `${x}px`;
     marker.style.top = `${y}px`;
-    marker.hidden = x < -90 || y < -45 || x > mapFrame.clientWidth + 90 || y > mapFrame.clientHeight + 45;
+    marker.style.zIndex = String(Math.round((1 - severity) * 30));
+    marker.hidden = x < -diameter || y < -diameter || x > mapFrame.clientWidth + diameter || y > mapFrame.clientHeight + diameter;
   }
   document.querySelector("#zoom-in").disabled = state.mapZoom >= 18;
   document.querySelector("#zoom-out").disabled = state.mapZoom <= 8;
@@ -420,45 +431,51 @@ function zoomMap(amount) {
 
 function drawMap() {
   const summary = state.summary;
-  mapGroup.replaceChildren();
   if (!summary?.detail?.frames) return;
   const frames = summary.detail.frames[state.policy];
-  const frame = frames[Math.min(state.day, frames.length - 1)];
+  const maxDay = frames.length - 1;
+  const day = Math.max(0, Math.min(maxDay, state.day));
+  const lo = Math.floor(day);
+  const hi = Math.min(maxDay, lo + 1);
+  const blend = day - lo;
+  const frame = frames[lo];
   const sizes = summary.detail.barrioSize;
-  dayLabel.textContent = `Día ${state.day + 1} · ${policies[state.policy].name}`;
+  dayLabel.textContent = `Día ${lo + 1} · ${policies[state.policy].name}`;
   const totals = frame.totals;
   dayTotals.textContent = `${totals.s} sanos · ${totals.e} mordidos · ${totals.i} zombies · ${totals.r} exorcizados · ${totals.d} sin recuperar`;
 
   summary.detail.barrios.forEach((barrio, index) => {
     const size = Math.max(1, sizes[index]);
-    const rate = frame.ever[index] / size;
-    const marker = document.createElement("button");
-    marker.type = "button";
-    marker.className = `map-marker${frame.i[index] > 0 ? " is-active" : ""}`;
-    marker.dataset.barrioId = barrio.id;
-    marker.style.setProperty("--marker-color", colorFor(rate));
-    marker.setAttribute("aria-label", `${barrio.name}: ${frame.i[index]} infecciosos hoy, ${frame.ever[index]} personas alcanzadas. Enfocar en el mapa.`);
-    marker.title = `${barrio.name}: ${frame.i[index]} infecciosos hoy · ${frame.ever[index]} alcanzados`;
-
-    const dot = document.createElement("span");
-    dot.className = "map-marker-dot";
-    const label = document.createElement("span");
-    label.className = "map-marker-label";
-    label.textContent = `${barrio.name} · ${frame.i[index]} hoy`;
-    marker.append(dot, label);
-    marker.addEventListener("click", () => setMapCenter(barrio.lat, barrio.lon));
-    mapGroup.append(marker);
+    const infected = frames[lo].i[index] * (1 - blend) + frames[hi].i[index] * blend;
+    const severity = Math.min(1, infected / size / 0.15);
+    let marker = mapGroup.querySelector(`[data-barrio-id="${barrio.id}"]`);
+    if (!marker) {
+      marker = document.createElement("button");
+      marker.type = "button";
+      marker.className = "map-marker";
+      marker.dataset.barrioId = barrio.id;
+      const dot = document.createElement("span");
+      dot.className = "map-marker-dot";
+      const label = document.createElement("span");
+      label.className = "map-marker-label";
+      marker.append(dot, label);
+      marker.addEventListener("click", () => setMapCenter(barrio.lat, barrio.lon));
+      mapGroup.append(marker);
+    }
+    marker.dataset.severity = String(severity);
+    marker.classList.toggle("is-active", infected >= 1);
+    marker.style.setProperty("--marker-color", colorFor(severity));
+    const shown = Math.max(0, Math.round(infected));
+    const noun = shown === 1 ? "zombie" : "zombies";
+    marker.querySelector(".map-marker-label").textContent = `${barrio.name} · ${shown} hoy`;
+    marker.setAttribute("aria-label", `${barrio.name}: ${shown} ${noun} hoy, ${Math.round((infected / size) * 100)} % del barrio. Enfocar en el mapa.`);
+    marker.title = `${barrio.name}: ${shown} ${noun} hoy`;
   });
   renderMap();
 }
 
-function syncDay() {
-  dayInput.value = String(state.day);
-  drawMap();
-}
-
 function stop() {
-  if (state.timer) clearInterval(state.timer);
+  if (state.timer) cancelAnimationFrame(state.timer);
   state.timer = 0;
   playButton.textContent = "Reproducir";
 }
@@ -470,11 +487,21 @@ function play() {
   }
   if (!state.summary) return;
   playButton.textContent = "Pausa";
-  state.timer = setInterval(() => {
+  const origin = state.day;
+  const started = performance.now();
+  const tick = (now) => {
     const max = state.summary.config.days - 1;
-    state.day = state.day >= max ? 0 : state.day + 1;
-    syncDay();
-  }, 450);
+    const day = Math.min(max, origin + (now - started) / 700);
+    state.day = day;
+    dayInput.value = String(Math.floor(day));
+    drawMap();
+    if (day >= max) {
+      stop();
+      return;
+    }
+    state.timer = requestAnimationFrame(tick);
+  };
+  state.timer = requestAnimationFrame(tick);
 }
 
 fillDefaults();
@@ -544,6 +571,7 @@ mapFrame.addEventListener("wheel", (event) => {
   zoomMap(event.deltaY < 0 ? 1 : -1);
 }, { passive: false });
 dayInput.addEventListener("input", () => {
+  stop();
   state.day = Number(dayInput.value);
   drawMap();
 });
