@@ -160,6 +160,19 @@ export function buildCity(seed, population) {
     }
   }
 
+  const n = people.length;
+  const homeOf = new Uint16Array(n);
+  const placeOf = new Int16Array(n);
+  const busOf = new Int16Array(n);
+  const barrioOf = new Uint8Array(n);
+  for (let i = 0; i < n; i += 1) {
+    const person = people[i];
+    homeOf[i] = person.home;
+    placeOf[i] = person.place;
+    busOf[i] = person.bus;
+    barrioOf[i] = person.barrio;
+  }
+
   const neighbors = BARRIOS.map(() => []);
   for (let a = 0; a < BARRIOS.length; a += 1) {
     for (let b = a + 1; b < BARRIOS.length; b += 1) {
@@ -178,6 +191,10 @@ export function buildCity(seed, population) {
     seed,
     n: people.length,
     people,
+    homeOf,
+    placeOf,
+    busOf,
+    barrioOf,
     homes,
     homeSize: homes.map((h) => h.length),
     homeBarrio: homeOfBarrio,

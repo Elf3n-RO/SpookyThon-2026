@@ -12,6 +12,8 @@ import {
   components,
   infectProb,
   expectedDirectInfections,
+  exposed,
+  prepareHazards,
 } from "./epi.js";
 import { planSmart, planRandom } from "./plan.js";
 
@@ -137,34 +139,41 @@ export function runStrategy(city, config, strategy, zero, detail) {
     ctx.day = day;
     ctx.wallet = wallet;
     ctx.fumForce = null;
+    ctx.rev = (ctx.rev || 0) + 1;
     let actions = [];
     if (strategy === "smart") actions = planSmart(ctx, scratch);
     else if (strategy === "random") actions = planRandom(ctx);
 
+    let touchCounts = false;
     for (const action of actions) {
       applyAction(action, ctx);
       wallet = ctx.wallet;
       spent += action.cost;
       spentBy[action.type] += action.cost;
       if (action.type === "vaccine") doses += 1;
-      else if (action.type === "quarantine") quarantines += 1;
-      else if (action.type === "fumigation") fumigations += 1;
+      else if (action.type === "quarantine") {
+        quarantines += 1;
+        touchCounts = true;
+      } else if (action.type === "fumigation") fumigations += 1;
       else if (action.type === "closure") closures += 1;
     }
     if (detail || day < 8) log.push({ day, ...summarizeLog(actions, city) });
 
-    fillCounts(city, status, quarantined, counts, config.quarantineLeak);
+    if (touchCounts) fillCounts(city, status, quarantined, counts, config.quarantineLeak);
+    ctx.rev = (ctx.rev || 0) + 1;
+    prepareHazards(ctx);
     const morningI = counts.I;
     prev.set(status);
     let news = 0;
     for (let i = 0; i < n; i += 1) {
       if (status[i] !== S) continue;
+      if (!exposed(i, ctx.hazard, city)) continue;
       const lambda = components(i, ctx).total;
       if (lambda <= 0) continue;
       if (unit(config.seed, day, i, 1) < infectProb(lambda)) {
         status[i] = E;
         timer[i] = config.incubationDays;
-        everBarrio[city.people[i].barrio] += 1;
+        everBarrio[city.barrioOf[i]] += 1;
         news += 1;
       }
     }

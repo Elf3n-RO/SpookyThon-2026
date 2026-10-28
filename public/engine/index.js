@@ -149,21 +149,29 @@ function publicDetail(trio) {
 export async function simulateMany(configInput = {}, onProgress, shouldContinue = () => true) {
   const config = normalizeConfig(configInput);
   const trios = [];
+  let slice = performance.now();
   for (let i = 0; i < config.runs; i += 1) {
     if (!shouldContinue()) return null;
     const seed = childSeed(config.seed, i);
     trios.push(runTrio({ ...config, seed }, false));
-    if (onProgress) {
-      onProgress(i + 1, config.runs);
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    }
+    if (!onProgress) continue;
+    onProgress(i + 1, config.runs);
+    if (performance.now() - slice < 48) continue;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (!shouldContinue()) return null;
+    slice = performance.now();
   }
   if (!shouldContinue()) return null;
+  return completeSummary(trios, config);
+}
+
+export function completeSummary(trios, configInput) {
+  const config = normalizeConfig(configInput);
   const stats = aggregate(trios, config);
   const detailTrio = runTrio({ ...config, seed: stats.representativeSeed }, true);
   const summary = {
     config,
-    runs: config.runs,
+    runs: trios.length,
     ...stats,
     detail: publicDetail(detailTrio),
   };

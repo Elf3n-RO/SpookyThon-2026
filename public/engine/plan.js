@@ -1,6 +1,6 @@
 import { unit } from "./rng.js";
 import { COSTS, closureCost } from "./params.js";
-import { S, I, components, horizonInfections, isFumigated } from "./epi.js";
+import { S, I, components, horizonInfections, isFumigated, exposed, prepareHazards } from "./epi.js";
 
 // El Comité no mira el futuro ni el azar de los dados.
 // Cada mañana ordena las acciones legales por contagios evitados por dólar
@@ -116,13 +116,16 @@ function pushAction(pool, type, target, cost, value, label) {
 }
 
 export function planSmart(ctx, scratch) {
+  prepareHazards(ctx);
   const pool = [];
-  const { city, status, counts } = ctx;
+  const { city, status } = ctx;
+  const people = city.people;
+  const hazard = ctx.hazard;
 
   for (let i = 0; i < city.n; i += 1) {
     if (status[i] === I && !ctx.quarantined[i] && (ctx.sickDays[i] || 0) >= ctx.config.reportLag) {
       const value = quarantineValue(i, ctx, scratch);
-      const person = city.people[i];
+      const person = people[i];
       const where = person.place >= 0 ? city.places[person.place].name : city.barrios[person.barrio].name;
       pushAction(pool, "quarantine", i, COSTS.quarantine, value, `Aislar caso en ${where}`);
     }
@@ -141,8 +144,10 @@ export function planSmart(ctx, scratch) {
   }
 
   for (let i = 0; i < city.n; i += 1) {
+    if (status[i] !== S || ctx.vaccinated[i] || ctx.config.vaccineEfficacy <= 0) continue;
+    if (!exposed(i, hazard, city)) continue;
     const value = vaccineValue(i, ctx);
-    const barrio = city.barrios[city.people[i].barrio].name;
+    const barrio = city.barrios[people[i].barrio].name;
     pushAction(pool, "vaccine", i, COSTS.vaccine, value, `Vacunar en ${barrio}`);
   }
 
@@ -176,60 +181,57 @@ export function planSmart(ctx, scratch) {
   return actions;
 }
 
-function collect(ids, predicate) {
-  const out = [];
-  for (let i = 0; i < ids.length; i += 1) {
-    if (predicate(ids[i])) out.push(ids[i]);
-  }
-  return out;
-}
-
 export function planRandom(ctx) {
   const { city, config, status } = ctx;
-  const reserved = new Set();
   const actions = [];
   let wallet = ctx.wallet;
   let guard = 0;
-
-  const vaccinePool = () =>
-    collect(indexRange(city.n), (i) => status[i] === S && !ctx.vaccinated[i] && !reserved.has(`vaccine:${i}`));
-  const quarantinePool = () =>
-    collect(
-      indexRange(city.n),
-      (i) =>
-        status[i] === I &&
-        !ctx.quarantined[i] &&
-        (ctx.sickDays[i] || 0) >= ctx.config.reportLag &&
-        !reserved.has(`quarantine:${i}`),
-    );
-  const fumigationPool = () => {
-    const any = [];
-    for (let b = 0; b < city.barrios.length; b += 1) {
-      if (isFumigated(b, ctx.day, ctx.fumUntil) || reserved.has(`fumigation:${b}`)) continue;
-      any.push(b);
+  const vaccines = [];
+  const quarantines = [];
+  for (let i = 0; i < city.n; i += 1) {
+    if (status[i] === S && !ctx.vaccinated[i]) vaccines.push(i);
+    else if (
+      status[i] === I &&
+      !ctx.quarantined[i] &&
+      (ctx.sickDays[i] || 0) >= config.reportLag
+    ) {
+      quarantines.push(i);
     }
-    return any;
+  }
+  const fumigations = [];
+  for (let b = 0; b < city.barrios.length; b += 1) {
+    if (!isFumigated(b, ctx.day, ctx.fumUntil)) fumigations.push(b);
+  }
+  const closures = [];
+  for (let p = 0; p < city.places.length; p += 1) {
+    const meta = city.places[p];
+    if (meta.type !== "school" && meta.type !== "market" && meta.type !== "central") continue;
+    if (ctx.day < ctx.closedUntil[p]) continue;
+    if (ctx.counts.infPlace[p] <= 0) continue;
+    closures.push(p);
+  }
+
+  const drop = (list, target) => {
+    const at = list.indexOf(target);
+    if (at >= 0) list.splice(at, 1);
   };
-  const closurePool = () => {
+  const affordableClosures = () => {
     const out = [];
-    for (let p = 0; p < city.places.length; p += 1) {
-      const meta = city.places[p];
-      if (meta.type !== "school" && meta.type !== "market" && meta.type !== "central") continue;
-      if (ctx.day < ctx.closedUntil[p] || reserved.has(`closure:${p}`)) continue;
-      if (ctx.counts.infPlace[p] <= 0) continue;
-      if (closureCost(meta.type) > wallet) continue;
-      out.push(p);
+    for (let i = 0; i < closures.length; i += 1) {
+      const place = closures[i];
+      if (closureCost(city.places[place].type) <= wallet) out.push(place);
     }
     return out;
   };
 
   while (wallet >= COSTS.quarantine && guard < 600) {
     guard += 1;
+    const openClosures = affordableClosures();
     const options = [];
-    if (wallet >= COSTS.vaccine && vaccinePool().length) options.push("vaccine");
-    if (wallet >= COSTS.quarantine && quarantinePool().length) options.push("quarantine");
-    if (wallet >= COSTS.fumigation && fumigationPool().length) options.push("fumigation");
-    if (closurePool().length) options.push("closure");
+    if (wallet >= COSTS.vaccine && vaccines.length) options.push("vaccine");
+    if (wallet >= COSTS.quarantine && quarantines.length) options.push("quarantine");
+    if (wallet >= COSTS.fumigation && fumigations.length) options.push("fumigation");
+    if (openClosures.length) options.push("closure");
     if (!options.length) break;
 
     const type = options[Math.floor(unit(config.seed, ctx.day, guard, 3) * options.length)];
@@ -237,22 +239,21 @@ export function planRandom(ctx) {
     let cost;
     let label;
     if (type === "vaccine") {
-      pool = vaccinePool();
+      pool = vaccines;
       cost = COSTS.vaccine;
       label = "Vacuna al azar";
     } else if (type === "quarantine") {
-      pool = quarantinePool();
+      pool = quarantines;
       cost = COSTS.quarantine;
       label = "Aislamiento al azar";
     } else if (type === "fumigation") {
-      pool = fumigationPool();
+      pool = fumigations;
       cost = COSTS.fumigation;
       label = "Fumigación al azar";
     } else {
-      pool = closurePool();
-      const pick = pool[Math.floor(unit(config.seed, ctx.day, guard, 9) * pool.length)];
+      const pick = openClosures[Math.floor(unit(config.seed, ctx.day, guard, 9) * openClosures.length)];
       cost = closureCost(city.places[pick].type);
-      const action = {
+      actions.push({
         type,
         target: pick,
         cost,
@@ -260,23 +261,15 @@ export function planRandom(ctx) {
         ratio: 0,
         label: `Cierre al azar de ${city.places[pick].name}`,
         key: `${type}:${pick}`,
-      };
-      actions.push(action);
+      });
       wallet -= cost;
-      reserved.add(action.key);
+      drop(closures, pick);
       continue;
     }
     const target = pool[Math.floor(unit(config.seed, ctx.day, guard, 8) * pool.length)];
-    const action = { type, target, cost, value: 0, ratio: 0, label, key: `${type}:${target}` };
-    actions.push(action);
+    actions.push({ type, target, cost, value: 0, ratio: 0, label, key: `${type}:${target}` });
     wallet -= cost;
-    reserved.add(action.key);
+    drop(pool, target);
   }
   return actions;
-}
-
-function indexRange(n) {
-  const ids = new Array(n);
-  for (let i = 0; i < n; i += 1) ids[i] = i;
-  return ids;
 }

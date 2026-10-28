@@ -159,5 +159,4 @@ Operar el sistema un mes, a precio de lista y con poco tráfico, se estima en **
 
 ## Presentación
 
-El PDF listo para entregar está en [docs/pitch.pdf](docs/pitch.pdf) (8 diapositivas, menos de 20 MB). La fuente editable está en [docs/pitch.html](docs/pitch.html); ábranla en el navegador e impriman en horizontal para regenerarlo.
-# SpookyThon-2026
+Las diapositivas están en [docs/pitch.html](docs/pitch.html). Ábranlas en el navegador e impriman en horizontal a PDF para entregarlas. El archivo no puede pasar de 20 MB.

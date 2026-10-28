@@ -19,7 +19,7 @@ const types = {
 const security = {
   "x-content-type-options": "nosniff",
   "referrer-policy": "strict-origin-when-cross-origin",
-  "content-security-policy": "default-src 'self'; img-src 'self' data: https://tile.openstreetmap.org; style-src 'self'; script-src 'self'",
+  "content-security-policy": "default-src 'self'; img-src 'self' data: https://tile.openstreetmap.org; style-src 'self'; script-src 'self'; worker-src 'self'",
 };
 
 function send(res, status, body, extra = {}) {

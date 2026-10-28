@@ -1,4 +1,4 @@
-import { BARRIOS, defaultConfig, normalizeConfig, simulateMany } from "./engine/index.js";
+import { BARRIOS, completeSummary, defaultConfig, normalizeConfig, simulateMany } from "./engine/index.js";
 import { num } from "./engine/report.js";
 
 const form = document.querySelector("#panel");
@@ -86,6 +86,72 @@ function readConfig() {
   return normalizeConfig(raw);
 }
 
+function simulateParallel(config, onProgress, shouldContinue) {
+  const cores = navigator.hardwareConcurrency || 2;
+  const workers = Math.min(4, Math.max(2, cores - 1));
+  if (typeof Worker === "undefined" || config.runs < 4 || workers < 2) {
+    return simulateMany(config, onProgress, shouldContinue);
+  }
+  const size = Math.ceil(config.runs / workers);
+  const chunks = [];
+  for (let start = 0; start < config.runs; start += size) chunks.push([start, Math.min(config.runs, start + size)]);
+  const progress = new Array(chunks.length).fill(0);
+  let settled = false;
+  const pool = [];
+  const kill = () => {
+    for (const worker of pool) worker.terminate();
+    pool.length = 0;
+  };
+  let cancel = () => {};
+  const done = new Promise((resolve, reject) => {
+    const stop = () => {
+      if (settled) return;
+      settled = true;
+      kill();
+      resolve(null);
+    };
+    cancel = stop;
+    let finished = 0;
+    const parts = new Array(chunks.length);
+    chunks.forEach(([start, end], index) => {
+      const worker = new Worker(new URL("./engine/worker.js", import.meta.url), { type: "module" });
+      pool.push(worker);
+      worker.onerror = () => {
+        if (settled) return;
+        settled = true;
+        kill();
+        reject(new Error("No se pudo repartir la simulación"));
+      };
+      worker.onmessage = (event) => {
+        if (settled) return;
+        if (!shouldContinue()) {
+          stop();
+          return;
+        }
+        const message = event.data;
+        if (message.type === "progress") {
+          progress[index] = message.done;
+          onProgress(progress.reduce((sum, value) => sum + value, 0), config.runs);
+          return;
+        }
+        parts[index] = message.trios;
+        finished += 1;
+        if (finished < chunks.length) return;
+        settled = true;
+        kill();
+        try {
+          resolve(completeSummary(parts.flat(), config));
+        } catch (error) {
+          reject(error);
+        }
+      };
+      worker.postMessage({ config, start, end, job: index });
+    });
+  });
+  done.cancel = cancel;
+  return done;
+}
+
 function markPreset(name) {
   document.querySelectorAll("[data-preset]").forEach((button) => {
     const on = button.dataset.preset === name;
@@ -124,16 +190,21 @@ async function onSubmit(event) {
   const token = ++state.runToken;
   state.running = true;
   stop();
+  state.job?.cancel();
   const config = readConfig();
   const label = presetLabel();
   runButton.disabled = true;
   headline.textContent = `Calculando «${label}»…`;
   progress.textContent = `${label}: preparando la ciudad…`;
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  if (token !== state.runToken) return;
+  const job = simulateParallel(config, (done, total) => {
+    if (token !== state.runToken) return;
+    progress.textContent = `${label}: corrida ${done} de ${total}`;
+  }, () => token === state.runToken);
+  state.job = job;
   try {
-    const summary = await simulateMany(config, (done, total) => {
-      if (token !== state.runToken) return;
-      progress.textContent = `${label}: corrida ${done} de ${total}`;
-    }, () => token === state.runToken);
+    const summary = await job;
     if (!summary || token !== state.runToken) return;
     state.summary = summary;
     state.day = 0;
