@@ -403,17 +403,20 @@ function renderMap() {
     const x = point.x - origin.x;
     const y = point.y - origin.y;
     const severity = Number(marker.dataset.severity) || 0;
-    const zoomScale = 2 ** (state.mapZoom - 11);
-    const radius = Math.sqrt(10 * 10 + (48 * 48 - 10 * 10) * severity) * zoomScale;
     const dot = marker.querySelector(".map-marker-dot");
-    const diameter = Math.max(16, Math.min(240, radius * 2));
-    dot.style.width = `${diameter}px`;
-    dot.style.height = `${diameter}px`;
+    const zone = marker.querySelector(".map-zone");
+    const spread = severity < 0.02 ? 0 : 28 + 108 * Math.sqrt(severity);
+    zone.style.width = `${spread}px`;
+    zone.style.height = `${spread}px`;
+    zone.style.borderRadius = "50%";
+    dot.style.width = "16px";
+    dot.style.height = "16px";
     dot.style.borderRadius = "50%";
     marker.style.left = `${x}px`;
     marker.style.top = `${y}px`;
-    marker.style.zIndex = String(Math.round((1 - severity) * 30));
-    marker.hidden = x < -diameter || y < -diameter || x > mapFrame.clientWidth + diameter || y > mapFrame.clientHeight + diameter;
+    marker.style.zIndex = String(Math.round((1 - severity) * 30) + 2);
+    const reach = Math.max(16, spread);
+    marker.hidden = x < -reach || y < -reach || x > mapFrame.clientWidth + reach || y > mapFrame.clientHeight + reach;
   }
   document.querySelector("#zoom-in").disabled = state.mapZoom >= 18;
   document.querySelector("#zoom-out").disabled = state.mapZoom <= 8;
@@ -454,11 +457,13 @@ function drawMap() {
       marker.type = "button";
       marker.className = "map-marker";
       marker.dataset.barrioId = barrio.id;
+      const zone = document.createElement("span");
+      zone.className = "map-zone";
       const dot = document.createElement("span");
       dot.className = "map-marker-dot";
       const label = document.createElement("span");
       label.className = "map-marker-label";
-      marker.append(dot, label);
+      marker.append(zone, dot, label);
       marker.addEventListener("click", () => setMapCenter(barrio.lat, barrio.lon));
       mapGroup.append(marker);
     }

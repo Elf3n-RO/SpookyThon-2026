@@ -587,36 +587,34 @@ summary { color: var(--green); cursor: pointer; font-size: 10px; font-weight: 80
   line-height: 0;
 }
 
-.map-marker-dot {
-  position: relative;
-  display: block;
-  width: var(--zone-size, 22px);
-  height: var(--zone-size, 22px);
-  border: 2px solid rgba(255, 255, 255, 0.92);
+.map-zone {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: 0;
+  height: 0;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.55), transparent 38%),
-    var(--marker-color);
-  box-shadow:
-    0 0 0 1px rgba(17, 17, 17, 0.45),
-    0 0 16px color-mix(in srgb, var(--marker-color) 70%, transparent);
-  opacity: 0.9;
+  background: var(--marker-color);
+  opacity: 0.34;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 
-.map-marker-dot::before {
-  content: "";
-  position: absolute;
-  inset: -42%;
-  z-index: -1;
+.map-marker-dot {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #111;
   border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--marker-color) 50%, transparent), transparent 68%);
-  pointer-events: none;
+  background: var(--marker-color);
+  box-shadow: 0 0 0 2px #fff;
 }
 
 .map-marker.is-active .map-marker-dot {
-  box-shadow:
-    0 0 0 2px #fff,
-    0 0 22px color-mix(in srgb, var(--marker-color) 80%, transparent);
+  box-shadow: 0 0 0 2px #fff;
 }
 
 .map-marker-label {
