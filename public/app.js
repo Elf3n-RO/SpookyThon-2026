@@ -1,6 +1,7 @@
 import { BARRIOS, completeSummary, defaultConfig, normalizeConfig, simulateMany } from "./engine/index.js";
 import { num } from "./engine/report.js";
 import { STREET_ROUTES } from "./streets.js";
+import { LOCAL_STREETS } from "./local-streets.js";
 
 const form = document.querySelector("#panel");
 const progress = document.querySelector("#progress");
@@ -17,6 +18,7 @@ const mapGroup = document.querySelector("#barrios");
 const mapFrame = document.querySelector("#map");
 const mapTiles = document.querySelector("#map-tiles");
 const mapRoutes = document.querySelector("#map-routes");
+const mapStreets = document.querySelector("#map-streets");
 const routeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
 mapRoutes.append(routeGroup);
 const mapStatus = document.querySelector("#map-status");
@@ -461,7 +463,7 @@ function renderMapTiles(origin) {
         tile.draggable = false;
         tile.decoding = "async";
         tile.addEventListener("load", () => {
-          mapStatus.textContent = "Si un barrio está muy afectado, el más cercano entra en la cadena y la infección sigue por las calles.";
+          mapStatus.textContent = "Si un barrio está muy afectado, el más cercano entra en la cadena y la infección sigue por las calles. Dentro del círculo las calles toman ese color, sin engordar.";
         }, { once: true });
         tile.addEventListener("error", () => {
           mapStatus.textContent = "No se pudieron cargar las teselas de OpenStreetMap. Los puntos simulados siguen visibles; compruebe su conexión.";
@@ -543,6 +545,74 @@ function zoneDiameterMeters(barrio, severity) {
   return Math.min(nearest * 4, 3200) * Math.sqrt(severity);
 }
 
+function metersBetween(lat, lon, barrio) {
+  const cos = Math.cos((((lat + barrio.lat) / 2) * Math.PI) / 180);
+  return Math.hypot((lat - barrio.lat) * 111320, (lon - barrio.lon) * 111320 * cos);
+}
+
+let streetZoom = -1;
+let streetPixels = null;
+
+function streetPixelCache() {
+  if (streetPixels && streetZoom === state.mapZoom) return streetPixels;
+  streetZoom = state.mapZoom;
+  streetPixels = {};
+  for (const [id, rows] of Object.entries(LOCAL_STREETS)) {
+    streetPixels[id] = rows.map((row) => {
+      const start = worldPixel(row[0], row[1], state.mapZoom);
+      const end = worldPixel(row[2], row[3], state.mapZoom);
+      return [start.x, start.y, end.x, end.y, (row[0] + row[2]) / 2, (row[1] + row[3]) / 2];
+    });
+  }
+  return streetPixels;
+}
+
+function renderLocalStreets(origin) {
+  const width = mapFrame.clientWidth;
+  const height = mapFrame.clientHeight;
+  const ratio = Math.min(2, window.devicePixelRatio || 1);
+  const pixelWidth = Math.round(width * ratio);
+  const pixelHeight = Math.round(height * ratio);
+  if (mapStreets.width !== pixelWidth || mapStreets.height !== pixelHeight) {
+    mapStreets.width = pixelWidth;
+    mapStreets.height = pixelHeight;
+  }
+  const context = mapStreets.getContext("2d");
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.clearRect(0, 0, width, height);
+  const zones = [];
+  for (const marker of mapGroup.children) {
+    const severity = Number(marker.dataset.severity) || 0;
+    if (severity < 0.02) continue;
+    const barrio = BARRIOS.find((item) => item.id === marker.dataset.barrioId);
+    const radius = zoneDiameterMeters(barrio, severity) / 2;
+    if (radius <= 0) continue;
+    zones.push({ barrio, severity, radius, picked: marker.classList.contains("is-picked") });
+  }
+  zones.sort((a, b) => Number(a.picked) - Number(b.picked) || a.severity - b.severity);
+  const cache = streetPixelCache();
+  context.lineWidth = 2.5;
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  for (const zone of zones) {
+    const rows = cache[zone.barrio.id];
+    if (!rows) continue;
+    context.beginPath();
+    for (const row of rows) {
+      if (metersBetween(row[4], row[5], zone.barrio) > zone.radius) continue;
+      const x1 = row[0] - origin.x;
+      const y1 = row[1] - origin.y;
+      const x2 = row[2] - origin.x;
+      const y2 = row[3] - origin.y;
+      if ((x1 < -30 && x2 < -30) || (y1 < -30 && y2 < -30) || (x1 > width + 30 && x2 > width + 30) || (y1 > height + 30 && y2 > height + 30)) continue;
+      context.moveTo(x1, y1);
+      context.lineTo(x2, y2);
+    }
+    context.strokeStyle = colorFor(zone.severity);
+    context.stroke();
+  }
+}
+
 let activeRoutes = [];
 let routeKey = "";
 let paintedRoutes = [];
@@ -591,11 +661,8 @@ function renderRoutes(origin) {
   for (const item of paintedRoutes) {
     const live = activeRoutes.find((route) => route.fromId === item.fromId && route.toId === item.toId);
     if (!live) continue;
-    const width = 3.2 + live.severity * 4.5;
     item.base.setAttribute("stroke", colorFor(live.severity));
-    item.base.setAttribute("stroke-width", width.toFixed(1));
     item.flow.setAttribute("stroke", "#fff6e8");
-    item.flow.setAttribute("stroke-width", Math.max(1.6, width * 0.42).toFixed(1));
   }
   routeGroup.setAttribute("transform", `translate(${(-origin.x).toFixed(1)} ${(-origin.y).toFixed(1)})`);
   mapRoutes.setAttribute("viewBox", `0 0 ${mapFrame.clientWidth} ${mapFrame.clientHeight}`);
@@ -606,6 +673,7 @@ function renderMap() {
   if (!mapFrame.clientWidth || !mapFrame.clientHeight) return;
   const origin = getMapOrigin();
   renderMapTiles(origin);
+  renderLocalStreets(origin);
   renderRoutes(origin);
   for (const marker of mapGroup.children) {
     const barrio = BARRIOS.find((item) => item.id === marker.dataset.barrioId);
