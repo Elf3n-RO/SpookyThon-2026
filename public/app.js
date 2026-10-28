@@ -557,7 +557,7 @@ function renderMap() {
     dot.style.borderRadius = "50%";
     marker.style.left = `${x}px`;
     marker.style.top = `${y}px`;
-    marker.style.zIndex = String(Math.round((1 - severity) * 30) + 2);
+    marker.style.zIndex = marker.classList.contains("is-picked") ? "100" : String(Math.round((1 - severity) * 30) + 2);
     const reach = Math.max(16, spread);
     marker.hidden = x < -reach || y < -reach || x > mapFrame.clientWidth + reach || y > mapFrame.clientHeight + reach;
   }
@@ -617,7 +617,12 @@ function drawMap() {
       const label = document.createElement("span");
       label.className = "map-marker-label";
       marker.append(zone, dot, label);
-      marker.addEventListener("click", () => setMapCenter(barrio.lat, barrio.lon));
+      marker.addEventListener("click", (event) => {
+        event.stopPropagation();
+        for (const item of mapGroup.querySelectorAll(".is-picked")) item.classList.remove("is-picked");
+        marker.classList.add("is-picked");
+        setMapCenter(barrio.lat, barrio.lon);
+      });
       mapGroup.append(marker);
     }
     marker.dataset.severity = String(severity);
@@ -625,17 +630,9 @@ function drawMap() {
     marker.style.setProperty("--marker-color", colorFor(severity));
     const shown = Math.max(0, Math.round(infected));
     const noun = shown === 1 ? "zombie" : "zombies";
-    const inherited = shown < 1 && chain.from[index] >= 0 && severity > own[index] + 0.01;
-    const text = inherited
-      ? `${barrio.name} · sigue a ${BARRIOS[chain.from[index]].name}`
-      : `${barrio.name} · ${shown} hoy`;
+    const text = `${barrio.name} · ${shown} hoy`;
     marker.querySelector(".map-marker-label").textContent = text;
-    marker.setAttribute(
-      "aria-label",
-      inherited
-        ? `${barrio.name}: entra en la cadena desde ${BARRIOS[chain.from[index]].name}. Enfocar en el mapa.`
-        : `${barrio.name}: ${shown} ${noun} hoy, ${Math.round((infected / size) * 100)} % del barrio. Enfocar en el mapa.`,
-    );
+    marker.setAttribute("aria-label", `${barrio.name}: ${shown} ${noun} hoy, ${Math.round((infected / size) * 100)} % del barrio. Enfocar en el mapa.`);
     marker.title = text;
   });
   renderMap();
