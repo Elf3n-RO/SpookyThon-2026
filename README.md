@@ -43,6 +43,10 @@ Brote sorpresa, sin tocar código: **Doble contagio**, **Mitad de presupuesto**,
 
 ## Cómo desplegarlo
 
+Amplify Hosting espera la carpeta `dist`. El build la arma con `npm run build` (copia `public/` ahí). El archivo `amplify.yml` de la raíz ya lo declara.
+
+Si la app se creó en la consola con un build vacío, esa consola pisa al archivo del repo. En la app de Amplify: **Hosting → Build settings**, y dejen la fase `build` con el comando `npm run build` y el directorio de artefactos `dist`. Si borran la especificación guardada en la consola, Amplify usa el `amplify.yml` del repositorio.
+
 1. Cuenta de AWS del equipo. `aws configure`.
 2. [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html).
 3. Desde la raíz:
