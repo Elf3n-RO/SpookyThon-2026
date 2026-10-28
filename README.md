@@ -26,10 +26,19 @@ Hace falta Node 20 o más nuevo.
 
 ```bash
 npm test
+npm run snapshot
 npm start
 ```
 
-Abrir http://localhost:8787 . La base arranca sola. Para repetir el número de arriba no cambien nada: semilla `20261030`, 20 corridas.
+Abrir http://localhost:8787. La base arranca sola. Para repetir el número de arriba no cambien nada: semilla `20261030`, 20 corridas. `npm test` comprueba la reproducibilidad, los límites de configuración y que la estrategia supere ambas líneas base; `npm run snapshot` imprime los promedios que aparecen en este README.
+
+Antes de desplegar, se puede comprobar que el sitio y el paquete de Lambda se generan con:
+
+```bash
+npm run pack
+```
+
+El comando crea `dist/` y `dist-lambda/`, ambos ignorados por Git. No se requieren dependencias npm externas.
 
 También se puede pedir por API, en local o en la Lambda:
 
@@ -53,7 +62,7 @@ powershell -ExecutionPolicy Bypass -File scripts/deploy.ps1 -Email equipo@correo
 
 Eso empaqueta el sitio, crea la pila `plaga-z` en **us-east-1**, sube `dist/` al bucket privado, invalida CloudFront y, si pasaron correo, crea el presupuesto de 10 USD con alerta al 50 % real y al 80 % previsto.
 
-4. La URL queda en la salida `SiteUrl`. Anótenla aquí antes de entregar:
+4. La URL queda en la salida `SiteUrl`. Antes de entregar, ábranla en una ventana privada y verifiquen que carga el sitio y que una simulación termina. Anótenla aquí:
 
 **URL pública:** _pegar después del deploy_
 
@@ -61,7 +70,7 @@ Eso empaqueta el sitio, crea la pila `plaga-z` en **us-east-1**, sube `dist/` al
 
 ![Alerta del presupuesto AWS](docs/budget.png)
 
-Esa imagen tiene que ser la captura real. No está en el repositorio a propósito: una captura inventada no sirve para la rúbrica.
+Esa imagen tiene que ser una captura real de la cuenta del equipo. No está en el repositorio a propósito: una captura inventada no sirve para la rúbrica.
 
 ## Qué hay en AWS
 
@@ -147,5 +156,5 @@ Operar el sistema un mes, a precio de lista y con poco tráfico, sale alrededor 
 
 ## Presentación
 
-Las láminas están en [docs/pitch.html](docs/pitch.html). Ábranlas en el navegador y usen imprimir → PDF, horizontal. Cabén en menos de 20 MB.
+Las láminas están en [docs/pitch.html](docs/pitch.html) y su exportación está en [docs/pitch.pdf](docs/pitch.pdf). Para regenerar el PDF después de cambiar las láminas, abran el HTML en Chrome o Edge, elijan **Imprimir → Guardar como PDF**, orientación horizontal, sin márgenes y activen los gráficos de fondo. Verifiquen que el PDF abra y pese menos de 20 MB antes de entregar.
 # SpookyThon-2026
