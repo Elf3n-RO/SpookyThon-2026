@@ -457,7 +457,7 @@ function renderMapTiles(origin) {
         tile.draggable = false;
         tile.decoding = "async";
         tile.addEventListener("load", () => {
-          mapStatus.textContent = "Círculos sobre Manta: el área queda en su barrio y sigue los zombies de hoy. Verde es leve, naranja es medio y rojo es grave.";
+          mapStatus.textContent = "Si un barrio está muy afectado, el más cercano entra en la cadena y el área sigue hacia él.";
         }, { once: true });
         tile.addEventListener("error", () => {
           mapStatus.textContent = "No se pudieron cargar las teselas de OpenStreetMap. Los puntos simulados siguen visibles; compruebe su conexión.";
@@ -488,24 +488,50 @@ function metersPerPixel(lat, zoom) {
   return (40075016.686 * Math.cos((lat * Math.PI) / 180)) / (256 * 2 ** zoom);
 }
 
-const zoneCap = new Map();
+let distanceRank = null;
+
+function rankByDistance() {
+  if (distanceRank) return distanceRank;
+  distanceRank = BARRIOS.map((barrio, index) =>
+    BARRIOS.map((other, otherIndex) => {
+      const cos = Math.cos((((barrio.lat + other.lat) / 2) * Math.PI) / 180);
+      const dLat = (other.lat - barrio.lat) * 111320;
+      const dLon = (other.lon - barrio.lon) * 111320 * cos;
+      return { index: otherIndex, distance: index === otherIndex ? Infinity : Math.hypot(dLat, dLon) };
+    }).sort((a, b) => a.distance - b.distance),
+  );
+  return distanceRank;
+}
+
+function spreadChain(own) {
+  const rank = rankByDistance();
+  const shown = own.slice();
+  const from = BARRIOS.map(() => -1);
+  for (let index = 0; index < own.length; index += 1) {
+    if (own[index] < 0.02) continue;
+    let current = index;
+    let previous = -1;
+    let level = own[index];
+    for (let step = 0; step < 4; step += 1) {
+      const next = rank[current].find((item) => item.index !== previous);
+      if (!next) break;
+      level *= 0.68;
+      if (level < 0.02) break;
+      if (level > shown[next.index]) {
+        shown[next.index] = level;
+        from[next.index] = current;
+      }
+      previous = current;
+      current = next.index;
+    }
+  }
+  return { shown, from };
+}
 
 function zoneDiameterMeters(barrio, severity) {
   if (severity < 0.02) return 0;
-  let cap = zoneCap.get(barrio.id);
-  if (cap === undefined) {
-    let nearest = Infinity;
-    const cos = Math.cos((barrio.lat * Math.PI) / 180);
-    for (const other of BARRIOS) {
-      if (other.id === barrio.id) continue;
-      const dLat = (other.lat - barrio.lat) * 111320;
-      const dLon = (other.lon - barrio.lon) * 111320 * cos;
-      nearest = Math.min(nearest, Math.hypot(dLat, dLon));
-    }
-    cap = Math.min(700, nearest * 0.62);
-    zoneCap.set(barrio.id, cap);
-  }
-  return cap * Math.sqrt(severity);
+  const nearest = rankByDistance()[BARRIOS.indexOf(barrio)][0].distance;
+  return Math.min(nearest * 4, 3200) * Math.sqrt(severity);
 }
 
 function renderMap() {
@@ -564,10 +590,20 @@ function drawMap() {
   const totals = frame.totals;
   dayTotals.textContent = `${totals.s} sanos · ${totals.e} mordidos · ${totals.i} zombies · ${totals.r} exorcizados · ${totals.d} sin recuperar`;
 
+  const own = [];
+  const infectedCounts = [];
   summary.detail.barrios.forEach((barrio, index) => {
     const size = Math.max(1, sizes[index]);
     const infected = frames[lo].i[index] * (1 - blend) + frames[hi].i[index] * blend;
-    const severity = Math.min(1, infected / size / 0.15);
+    infectedCounts[index] = infected;
+    own[index] = Math.min(1, infected / size / 0.15);
+  });
+  const chain = spreadChain(own);
+
+  summary.detail.barrios.forEach((barrio, index) => {
+    const size = Math.max(1, sizes[index]);
+    const infected = infectedCounts[index];
+    const severity = chain.shown[index];
     let marker = mapGroup.querySelector(`[data-barrio-id="${barrio.id}"]`);
     if (!marker) {
       marker = document.createElement("button");
@@ -585,13 +621,22 @@ function drawMap() {
       mapGroup.append(marker);
     }
     marker.dataset.severity = String(severity);
-    marker.classList.toggle("is-active", infected >= 1);
+    marker.classList.toggle("is-active", severity >= 0.02);
     marker.style.setProperty("--marker-color", colorFor(severity));
     const shown = Math.max(0, Math.round(infected));
     const noun = shown === 1 ? "zombie" : "zombies";
-    marker.querySelector(".map-marker-label").textContent = `${barrio.name} · ${shown} hoy`;
-    marker.setAttribute("aria-label", `${barrio.name}: ${shown} ${noun} hoy, ${Math.round((infected / size) * 100)} % del barrio. Enfocar en el mapa.`);
-    marker.title = `${barrio.name}: ${shown} ${noun} hoy`;
+    const inherited = shown < 1 && chain.from[index] >= 0 && severity > own[index] + 0.01;
+    const text = inherited
+      ? `${barrio.name} · sigue a ${BARRIOS[chain.from[index]].name}`
+      : `${barrio.name} · ${shown} hoy`;
+    marker.querySelector(".map-marker-label").textContent = text;
+    marker.setAttribute(
+      "aria-label",
+      inherited
+        ? `${barrio.name}: entra en la cadena desde ${BARRIOS[chain.from[index]].name}. Enfocar en el mapa.`
+        : `${barrio.name}: ${shown} ${noun} hoy, ${Math.round((infected / size) * 100)} % del barrio. Enfocar en el mapa.`,
+    );
+    marker.title = text;
   });
   renderMap();
 }
