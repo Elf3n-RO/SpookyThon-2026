@@ -20,6 +20,19 @@ test("cada barrio tiene coordenadas válidas para el mapa", () => {
     assert.ok(Number.isFinite(barrio.lat) && barrio.lat >= -90 && barrio.lat <= 90, barrio.name);
     assert.ok(Number.isFinite(barrio.lon) && barrio.lon >= -180 && barrio.lon <= 180, barrio.name);
   }
+
+  const coordinates = new Map(BARRIOS.map(({ id, lat, lon }) => [id, { lat, lon }]));
+  const referenceBounds = {
+    barbasquillo: { south: -0.9616, north: -0.9415, west: -80.7628, east: -80.7427 },
+    "eloy-alfaro": { south: -0.9985, north: -0.9689, west: -80.7192, east: -80.6939 },
+    jocay: { south: -0.9699, north: -0.9498, west: -80.7262, east: -80.7061 },
+    "santa-marianita": { south: -0.9839, north: -0.9756, west: -80.8451, east: -80.8376 },
+  };
+  for (const [id, bounds] of Object.entries(referenceBounds)) {
+    const point = coordinates.get(id);
+    assert.ok(point.lat >= bounds.south && point.lat <= bounds.north, `${id} fuera de su referencia OSM`);
+    assert.ok(point.lon >= bounds.west && point.lon <= bounds.east, `${id} fuera de su referencia OSM`);
+  }
 });
 
 test("una corrida es reproducible y no se pasa del presupuesto", () => {

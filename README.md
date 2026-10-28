@@ -45,9 +45,11 @@ El API del servidor recorta a 30 corridas. La Lambda, a 24. El navegador acepta 
 
 Brote sorpresa, sin tocar código: **Doble contagio**, **Mitad de presupuesto**, **Empieza en el mercado**, **Vacuna a medias**. Cada botón cambia el parámetro y vuelve a simular.
 
-El mapa usa teselas públicas de [OpenStreetMap](https://www.openstreetmap.org/copyright), cargadas directamente desde `tile.openstreetmap.org` (sin clave API). Se puede acercar, alejar, arrastrar y seleccionar un barrio para centrarlo. Los puntos representan resultados de la población sintética, no pacientes ni reportes actuales; los centros de barrio son aproximaciones para visualización, no geodatos oficiales. Se necesita conexión a internet para el mapa base; si las teselas no cargan, la interfaz lo indica y conserva los puntos simulados.
+El mapa usa teselas públicas de [OpenStreetMap](https://www.openstreetmap.org/copyright), cargadas directamente desde `tile.openstreetmap.org` (sin clave API). Se puede acercar, alejar, arrastrar y seleccionar un barrio para centrarlo. Se revisaron las coordenadas de Barbasquillo, Eloy Alfaro, Jocay, Los Esteros y Santa Marianita contra referencias cartográficas de OpenStreetMap; algunas ubicaciones restantes son aproximadas. Los puntos representan resultados de la población sintética, no pacientes ni reportes actuales, y no son geodatos oficiales. Se necesita conexión a internet para el mapa base; si las teselas no cargan, la interfaz lo indica y conserva los puntos simulados.
 
 ## Cómo desplegarlo
+
+Amplify Hosting espera la carpeta `dist`. El `amplify.yml` de la raíz ejecuta `npm run build`, que copia `public/` a `dist/`; confirma que la consola de Amplify use esta especificación de compilación.
 
 1. Cuenta de AWS del equipo. `aws configure`.
 2. [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html).

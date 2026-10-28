@@ -8,6 +8,7 @@
     "start": "node server.js",
     "test": "node --test",
     "snapshot": "node scripts/snapshot.js",
+    "build": "node scripts/pack-site.js",
     "pack": "node scripts/pack-site.js"
   },
   "engines": {
